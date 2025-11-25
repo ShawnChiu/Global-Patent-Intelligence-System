@@ -26,9 +26,9 @@ class MatrixStrategy:
         # 3. 通用型 Prompt (General Purpose Prompt)
         # 關鍵：不指定領域，要求 AI "Infer" (推論) 領域
         prompt = f"""
-        Role: Expert Patent Strategist & Multilingual Translator.
+        Role: Expert Patent Strategist & Taxonomist.
         
-        Task: Analyze the patent corpus to discover the technology domain and construct a "Technology-Efficacy Matrix" strategy.
+        Task: Analyze the provided patent corpus (Sample Patents) to automatically discover the technology domain and construct a "Technology-Efficacy Matrix" strategy.
         
         [Input Patent Corpus]
         {corpus}
