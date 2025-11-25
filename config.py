@@ -3,6 +3,7 @@
 # API 設定
 API_URL = "https://tiponet.tipo.gov.tw/gpss1/gpsskmc/gpss_api"
 DEFAULT_USER_CODE = ""
+DEFAULT_GEMINI_API = ""
 
 # 預設矩陣定義
 DEFAULT_TECH_CONFIG = """PGU: projector, pgu, light engine, 光機
