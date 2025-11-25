@@ -9,7 +9,7 @@ class GPSSClient:
     def __init__(self, api_key):
         self.api_key = api_key
 
-    def fetch_data(self, query, ipc_code, qty):
+    def fetch_data(self, query, qty):
         """
         發送請求並回傳原始 DataFrame
         """
@@ -22,7 +22,7 @@ class GPSSClient:
             "expQty": str(qty),
             "expFld": "TI,AB,IC,AD,PN", # 只取需要的欄位
             "TI": query,
-            "IC": ipc_code if ipc_code.strip() else ""
+            "IC": ""
         }
 
         try:

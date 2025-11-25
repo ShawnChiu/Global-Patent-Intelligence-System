@@ -1,39 +1,90 @@
 # 檔案位置：views/components.py
 import streamlit as st
 import plotly.express as px
+import re
 
 try:
-    from config import DEFAULT_USER_CODE, DEFAULT_TECH_CONFIG, DEFAULT_EFFECT_CONFIG
+    from config import DEFAULT_USER_CODE, DEFAULT_TECH_CONFIG, DEFAULT_EFFECT_CONFIG, DEFAULT_GEMINI_API
 except ImportError:
     DEFAULT_USER_CODE = ""
     DEFAULT_TECH_CONFIG = "PGU: projector\nCombiner: waveguide"
     DEFAULT_EFFECT_CONFIG = "FOV: fov\nVID: vid"
+    DEFAULT_GEMINI_API = ""
+
+FIELD_OPTS = {
+    "TI/AB/CL": "標題/摘要/範圍 (複合)",
+    "TI": "標題 (Title)", "AB": "摘要 (Abstract)", "CL": "專利範圍 (Claims)",
+    "CI": "IPC 分類號", "PR": "優先權 (Priority)", "PN": "公告號",
+    "PA": "申請人", "IN": "發明人"
+}
+
+def parse_advanced_query(raw_query):
+    """將 GPSS 網頁版的複雜檢索式拆解為 API 可用的參數"""
+    if not raw_query: return "", ""
+    ipc_pattern = r"IC=([A-Z0-9]+)\*?"
+    ipcs = re.findall(ipc_pattern, raw_query)
+    clean_ipc = ",".join(sorted(list(set(ipcs))))
+    temp = re.sub(r"\$?IC=[A-Z0-9\*]+", "", raw_query)
+    temp = re.sub(r"\$?ID=:?[0-9\$\*]+", "", temp)
+    temp = re.sub(r"@[A-Z,]+", "", temp)
+    temp = re.sub(r"\)\s*AND\s*$", ")", temp.strip())
+    temp = re.sub(r"^\s*AND\s*", "", temp)
+    clean_keywords = re.sub(r"\s+", " ", temp).strip()
+    return clean_keywords, clean_ipc
 
 def render_sidebar():
-    # 渲染側邊欄並回傳使用者的輸入
+
     with st.sidebar:
         st.header("⚙️ 參數設定")
-        api_key = st.text_input("API Key", value=DEFAULT_USER_CODE, type="password")
+        api_key = st.text_input("GPSS API Key", value=DEFAULT_USER_CODE, type="password")
+        qty = st.slider("抓取數量", 10, 5000, 100)
+
+        st.divider()
+        st.header("🔍 搜尋條件")
+        expression = st.text_input("輸入布林檢索式", value="HUD OR 抬頭顯示器 OR 平視顯示器 OR ヘッドアップディスプレイ OR 헤드 업 디스플레이", type="default")
+
+        st.divider()
+        st.header("🤖 分析設定")
         
-        # 預設值改為符合你報告的設定
-        query = st.text_input("檢索關鍵字", value="(HUD OR 抬頭顯示器) AND (AR OR 擴增實境)")
-        ipc = st.text_input("IPC 分類號", value="G02B,B60K")
-        qty = st.slider("抓取數量", 10, 10000, 100)
+        matrix_mode = st.radio(
+            "選擇矩陣分析模式",
+            ["關鍵字規則 (Rule-based)", "AI 語意推論 (Gemini LLM)"],
+            captions=["快速、免費，需定義關鍵字", "精準、自動分類，需 Google API Key"]
+        )
         
-        st.header("📊 矩陣定義")
-        tech_conf = st.text_area("技術手段定義", value=DEFAULT_TECH_CONFIG, height=200)
-        effect_conf = st.text_area("功效定義", value=DEFAULT_EFFECT_CONFIG, height=150)
+        tech_conf = ""
+        effect_conf = ""
+        llm_key = ""
+
+        if matrix_mode == "關鍵字規則 (Rule-based)":
+            with st.expander("定義關鍵字規則", expanded=True):
+                tech_conf = st.text_area("技術手段 (X軸)", value=DEFAULT_TECH_CONFIG, height=150)
+                effect_conf = st.text_area("達成功效 (Y軸)", value=DEFAULT_EFFECT_CONFIG, height=150)
+                
+        else: # AI Mode
+            st.markdown("""
+            **🧠 AI 全自動分類** 系統將自動閱讀專利摘要並分析功效定義
+            """)
+            llm_key = st.text_input("Google Gemini API Key", value=DEFAULT_GEMINI_API, type="password", placeholder="貼上你的 AI Studio Key")
+            if not llm_key:
+                st.warning("請輸入 Key 以啟動 AI 功能")
         
         submitted = st.button("🚀 開始分析", type="primary")
         
     return {
-        "api_key": api_key, "query": query, "ipc": ipc, "qty": qty,
-        "tech_conf": tech_conf, "effect_conf": effect_conf, "submitted": submitted
+        "api_key": api_key, 
+        "expression": expression, 
+        "qty": qty,
+        "tech_conf": tech_conf, 
+        "effect_conf": effect_conf,
+        "matrix_mode": matrix_mode, # 回傳模式
+        "llm_key": llm_key,         # 回傳 LLM Key
+        "submitted": submitted
     }
 
 def render_charts(df, matrix_df):
     # 渲染所有圖表
-    tab1, tab2, tab3, tab4 = st.tabs(["技術領域", "布局戰場", "申請趨勢", "技術功效矩陣"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["技術領域分類分析", "技術領先企業", "主要布局國家", "專利申請趨勢", "技術功效矩陣"])
     
     with tab1:
         if 'IPC' in df.columns:

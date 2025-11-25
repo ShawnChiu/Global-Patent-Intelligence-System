@@ -1,0 +1,40 @@
+{'technologies': [
+        {'label': 'Image Generation Unit (PGU)', 'keywords': ['PGU', 'Display Panel', 'Optical Engine', '影像產生裝置', '顯示面板', '光機'
+            ], 'boolean': '(PGU OR "Display Panel" OR "Optical Engine" OR 影像產生裝置 OR 顯示面板 OR 光機)'
+        },
+        {'label': 'Optical Components', 'keywords': ['Lens', 'Mirror', 'Reflector', '光學元件', '透鏡', '反射鏡'
+            ], 'boolean': '(Lens OR Mirror OR Reflector OR 光學元件 OR 透鏡 OR 反射鏡)'
+        },
+        {'label': 'Light Source Module', 'keywords': ['Backlight', 'LED', 'Laser Diode', '光源', '背光', '燈珠'
+            ], 'boolean': '(Backlight OR LED OR "Laser Diode" OR 光源 OR 背光 OR 燈珠)'
+        },
+        {'label': 'Control Processor', 'keywords': ['Controller', 'Processor', 'MCU', '控制器', '處理器', '單片機'
+            ], 'boolean': '(Controller OR Processor OR MCU OR 控制器 OR 處理器 OR 單片機)'
+        },
+        {'label': 'Sensor Unit', 'keywords': ['Sensor', 'Camera', 'Temperature Sensor', '環境光傳感器', '溫度傳感器', '檢測部'
+            ], 'boolean': '(Sensor OR Camera OR "Temperature Sensor" OR 環境光傳感器 OR 溫度傳感器 OR 檢測部)'
+        },
+        {'label': 'Power Management Unit', 'keywords': ['Power Supply', 'Driver IC', 'Power Control', '電源管理', '驅動電路', '供電單元'
+            ], 'boolean': '("Power Supply" OR "Driver IC" OR "Power Control" OR 電源管理 OR 驅動電路 OR 供電單元)'
+        }
+    ], 'efficacies': [
+        {'label': 'Display Quality', 'keywords': ['Brightness', 'Contrast', 'Clarity', '亮度', '對比度', '清晰度'
+            ], 'boolean': '(Brightness OR Contrast OR Clarity OR 亮度 OR 對比度 OR 清晰度)'
+        },
+        {'label': 'Driving Safety', 'keywords': ['Safety', 'Accident Prevention', 'Driver Distraction', '行車安全', '駕駛安全性', '駕駛分心'
+            ], 'boolean': '(Safety OR "Accident Prevention" OR "Driver Distraction" OR 行車安全 OR 駕駛安全性 OR 駕駛分心)'
+        },
+        {'label': 'Energy Efficiency', 'keywords': ['Power Consumption', 'Energy Saving', 'Low Power', '功耗', '節能', '電力效率'
+            ], 'boolean': '("Power Consumption" OR "Energy Saving" OR "Low Power" OR 功耗 OR 節能 OR 電力效率)'
+        },
+        {'label': 'Thermal Management', 'keywords': ['Heat Dissipation', 'Temperature Control', 'Overheating', '散熱', '溫度控制', '熱傷害'
+            ], 'boolean': '("Heat Dissipation" OR "Temperature Control" OR Overheating OR 散熱 OR 溫度控制 OR 熱傷害)'
+        },
+        {'label': 'Compactness & Integration', 'keywords': ['Size Reduction', 'Space Saving', 'Volume', '體積減小', '空間節省', '小型化'
+            ], 'boolean': '("Size Reduction" OR "Space Saving" OR Volume OR 體積減小 OR 空間節省 OR 小型化)'
+        },
+        {'label': 'User Experience', 'keywords': ['Convenience', 'Comfort', 'Intuitive', '使用者體驗', '舒適度', '便捷性'
+            ], 'boolean': '(Convenience OR Comfort OR Intuitive OR 使用者體驗 OR 舒適度 OR 便捷性)'
+        }
+    ]
+}
