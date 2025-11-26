@@ -13,8 +13,6 @@ def render_sidebar():
     # 渲染側邊欄並回傳使用者的輸入
     with st.sidebar:
         st.header("⚙️ 參數設定")
-        api_key = st.text_input("API Key", value=DEFAULT_USER_CODE, type="password")
-        
         # 預設值改為符合你報告的設定
         query = st.text_input("檢索關鍵字", value="(HUD OR 抬頭顯示器) AND (AR OR 擴增實境)")
         ipc = st.text_input("IPC 分類號", value="G02B,B60K")
@@ -27,7 +25,7 @@ def render_sidebar():
         submitted = st.button("🚀 開始分析", type="primary")
         
     return {
-        "api_key": api_key, "query": query, "ipc": ipc, "qty": qty,
+        "query": query, "ipc": ipc, "qty": qty,
         "tech_conf": tech_conf, "effect_conf": effect_conf, "submitted": submitted
     }
 
