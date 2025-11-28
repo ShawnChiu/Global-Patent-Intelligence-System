@@ -26,19 +26,19 @@ def main():
 
     if inputs["submitted"]:
         # 2. 初始化客戶端 (Model)
-        client = GPSSClient(browser)
+        # client = GPSSClient(browser)
 
-        with st.spinner("正在進行 ETL (Extract-Transform-Load) ..."):
-            try:
-                # 3. 獲取數據 (Model)
-                client.fetch_data(inputs["query"])
+        # with st.spinner("正在進行 ETL (Extract-Transform-Load) ..."):
+        #     try:
+        #         # 3. 獲取數據 (Model)
+        #         client.fetch_data(inputs["query"])
                 
-            except Exception as e:
-                st.error(f"系統發生錯誤: {str(e)}")
+        #     except Exception as e:
+        #         st.error(f"系統發生錯誤: {str(e)}")
         
         with st.spinner("正在讀取並渲染圖表 ..."):
             # 4. 讀取並渲染圖表 (View)
-            render_charts_from_files(["diagarm_1.html", "diagram_2.html", "diagram_3.html", "diagram_4.html"])
+            render_charts_from_files({"ipc": ".data/diagarm_3.html", "country": ".data/diagram_4.html", 'trend_range': ".data/diagram_2.html", 'trend_year': ".data/diagram_1.html"})
         # with st.spinner("正在進行矩陣維度分析 ..."):
         #     try:
         #         data, state = BooleanRetrievalGenerator.generate_gpss_strategy(df, inputs["llm_key"]);    
