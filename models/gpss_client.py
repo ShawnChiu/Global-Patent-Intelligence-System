@@ -47,12 +47,10 @@ class GPSSClient:
         return self.page.url
     
     def dedup_by_family(self):
-        self.page.locator("input[value='家族去重']").click()        
-        self.page.wait_for_load_state()
+        self.page.locator("input[value='家族去重']").click(timeout = 0)        
     
     def dedup_by_search(self):
-        self.page.locator("input[value='檢索去重']").click()        
-        self.page.wait_for_load_state()
+        self.page.locator("input[value='檢索去重']").click(timeout = 0)        
     
     def add_to_list(self):
         self.page.locator("input[title='本次全選']").click()
@@ -69,25 +67,41 @@ class GPSSClient:
 
         self.page2.locator("select[name='fld4']").select_option("YP_0")
         self.page2.locator("select[name='limit4']").select_option("4")
-        self.page2.locator("select[name='fld2']").select_option("IP3")
-        self.page2.locator("select[name='limit2']").select_option("30")
+        with self.page2.expect_download() as download_info:
+            buttons[1].click()
+            self.page2.wait_for_load_state()
+        download = download_info.value
+        file_name = f"diagram_{1}.html"
+        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
+        download.save_as(destination_path)
 
-        for i in range(3):
-            with self.page2.expect_download() as download_info:
-                buttons[i].click()
-                self.page2.wait_for_load_state()
-            download = download_info.value
-            file_name = f"diagram_{i+1}.html"
-            destination_path = os.path.join(os.getcwd() + "/.data", file_name)
-            download.save_as(destination_path)
-        
+        self.page2.locator("select[name='limit2']").select_option("30")
+        self.page2.locator("select[name='fld2']").select_option("AX")
+        with self.page2.expect_download() as download_info:
+            buttons[2].click()
+        download = download_info.value
+        file_name = f"diagram_{2}.html"
+        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
+        download.save_as(destination_path)
+
+        self.page2.locator("select[name='limit2']").select_option("30")
         self.page2.locator("select[name='fld2']").select_option("AY")
+        with self.page2.expect_download() as download_info:
+            buttons[2].click()
+        download = download_info.value
+        file_name = f"diagram_{3}.html"
+        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
+        download.save_as(destination_path)
+
+        self.page2.locator("select[name='limit2']").select_option("30")
+        self.page2.locator("select[name='fld2']").select_option("IP3")
         with self.page2.expect_download() as download_info:
             buttons[2].click()
         download = download_info.value
         file_name = f"diagram_{4}.html"
         destination_path = os.path.join(os.getcwd() + "/.data", file_name)
         download.save_as(destination_path)
+
 
         self.page2.close()
 
@@ -97,16 +111,13 @@ class GPSSClient:
         self.page2.goto(curr_url)
         self.page2.wait_for_load_state()
         self.page2.locator("input[title='下載全選']").click()
-        self.page2.wait_for_load_state()
 
         self.page2.locator("span[data-target='#outpop']").click()
-        self.page2.wait_for_load_state()
         modal = self.page2.locator("div[id='outpop']")
         modal.locator("input[value='全不選']").click()
         modal.locator("input[name='_9_11_S_TI']").click()
         modal.locator("input[name='_9_11_S_AB']").click()
-        modal.locator("input[title='執行輸出']").click()
-        self.page2.wait_for_load_state(timeout = 0)
+        modal.locator("input[title='執行輸出']").click(timeout = 0)
         modal.locator("span[class='modal_close']").click()
 
         self.page2.close()
