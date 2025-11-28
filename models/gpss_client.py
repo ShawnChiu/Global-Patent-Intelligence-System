@@ -118,7 +118,7 @@ class GPSSClient:
         modal.locator("input[name='_9_11_S_TI']").click()
         modal.locator("input[name='_9_11_S_AB']").click()
 
-        with self.page2.expect_download() as download_info:
+        with self.page2.expect_download(timeout = 0) as download_info:
             modal.locator("input[title='執行輸出']").click(timeout = 0)
         download = download_info.value
         file_name = f"contents.xls"
