@@ -10,7 +10,7 @@ from playwright.sync_api import sync_playwright
 from models.gpss_client import GPSSClient
 from services.analyzer import PatentAnalyzer
 from views.components import render_sidebar, render_charts_from_files
-from services.strategy_generator import BooleanRetrievalGenerator
+from models.gemini_client import GeminiClient
 
 # 設定頁面資訊 (這行必須是 main 的第一行 Streamlit 指令)
 st.set_page_config(page_title="專利分析", layout="wide")
@@ -26,19 +26,29 @@ def main():
 
     if inputs["submitted"]:
         # 2. 初始化客戶端 (Model)
-        # client = GPSSClient(browser)
+        gemini_client = GeminiClient(inputs["llm_key"])
 
-        # with st.spinner("正在進行 ETL (Extract-Transform-Load) ..."):
-        #     try:
-        #         # 3. 獲取數據 (Model)
-        #         client.fetch_data(inputs["query"])
+        if inputs["search_mode"] != "搜尋布林檢索式":
+            with st.spinner("正在生成布林檢索式，請稍候..."):
+                query = gemini_client.convert_topic_to_query(inputs["query"])
+                with st.expander("查看布林檢索式", expanded=False):
+                    st.text(query)
+        else:
+            query = inputs["query"]
+
+        gpss_client = GPSSClient(browser)
+
+        with st.spinner("正在進行 ETL (Extract-Transform-Load) ..."):
+            try:
+                # 3. 獲取數據 (Model)
+                gpss_client.fetch_data(query)
                 
-        #     except Exception as e:
-        #         st.error(f"系統發生錯誤: {str(e)}")
+            except Exception as e:
+                st.error(f"系統發生錯誤: {str(e)}")
         
         with st.spinner("正在讀取並渲染圖表 ..."):
             # 4. 讀取並渲染圖表 (View)
-            render_charts_from_files({"ipc": ".data/diagram_3.html", "assignee": ".data/diagram_1.html", 'country': ".data/diagram_4.html", 'trend_range': ".data/diagram_2.html"})
+            render_charts_from_files({"ipc": ".data/diagram_4.html", "assignee": ".data/diagram_2.html", 'country': ".data/diagram_3.html", 'trend_range': ".data/diagram_1.html"})
         # with st.spinner("正在進行矩陣維度分析 ..."):
         #     try:
         #         data, state = BooleanRetrievalGenerator.generate_gpss_strategy(df, inputs["llm_key"]);    

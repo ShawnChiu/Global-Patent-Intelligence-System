@@ -23,7 +23,19 @@ FIELD_OPTS = {
 def render_sidebar():
     with st.sidebar:
         st.header("🔍 搜尋條件")
-        query = st.text_input("輸入布林檢索式", value="HUD OR 抬頭顯示器 OR 平視顯示器 OR ヘッドアップディスプレイ OR 헤드 업 디스플레이", type="default")
+
+        search_mode = st.radio(
+            "選擇搜尋模式",
+            ["搜尋布林檢索式", "AI 檢索式推論 (Gemini LLM)"],
+        )
+        query = ""
+        if search_mode == "搜尋布林檢索式":
+            query = st.text_input("輸入布林檢索式", value="HUD OR 抬頭顯示器 OR 平視顯示器 OR ヘッドアップディスプレイ OR 헤드 업 디스플레이", type="default")
+        else:
+            st.markdown("""
+            **🧠 AI 自動生成布林檢索式** 系統將根據主題自動生成複雜的布林檢索式
+            """)
+            query = st.text_input("輸入技術主題", value="HUD 抬頭顯示器", type="default")
 
         st.divider()
         st.header("🤖 分析設定")
@@ -47,10 +59,14 @@ def render_sidebar():
             st.markdown("""
             **🧠 AI 全自動分類** 系統將自動閱讀專利摘要並分析功效定義
             """)
-            llm_key = st.text_input("Google Gemini API Key", value=DEFAULT_GEMINI_API, type="password", placeholder="貼上你的 AI Studio Key")
             if not llm_key:
                 st.warning("請輸入 Key 以啟動 AI 功能")
         
+        st.divider()
+        st.header("🔑 API 設定")
+
+        llm_key = st.text_input("Google Gemini API Key", value=DEFAULT_GEMINI_API, type="password", placeholder="貼上你的 AI Studio Key")
+            
         submitted = st.button("🚀 開始分析", type="primary")
         
     return {
@@ -58,6 +74,7 @@ def render_sidebar():
         "tech_conf": tech_conf, 
         "effect_conf": effect_conf,
         "matrix_mode": matrix_mode, 
+        "search_mode": search_mode,
         "llm_key": llm_key,
         "submitted": submitted
     }

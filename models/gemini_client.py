@@ -2,16 +2,18 @@ import google.generativeai as genai
 import json
 import pandas as pd
 
-class BooleanRetrievalGenerator:
-    @staticmethod
-    def convert_topic_to_query(topic, api_key):
+class GeminiClient:
+
+    def __init__(self, api_key):
+        self.api_key = api_key
+
+    def convert_topic_to_query(self, topic):
         """
         將簡單的主題名稱（如 '固態電池'）轉換為 GPSS 專用的超複雜布林檢索式
         """
-        if not api_key: return "Error: Missing API Key"
-        
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash') # 用 Flash 比較快且便宜
+
+        genai.configure(api_key=self.api_key)
+        model = genai.GenerativeModel('gemini-2.5-flash') # 用 Flash 比較快且便宜
         
         # 這裡貼上上面的 prompt 變數
         final_prompt = f"""
@@ -54,13 +56,10 @@ class BooleanRetrievalGenerator:
         except Exception as e:
             return f"Generation Failed: {str(e)}"
 
-    @staticmethod
-    def generate_gpss_strategy(df, api_key):
+    def generate_gpss_strategy(self, df):
         """
         通用版：自動偵測領域，並生成該領域的矩陣關鍵字與布林檢索式
         """
-        if df.empty or not api_key:
-            return None, "資料不足或無 Key"
 
         # 1. 準備文本 (取前 300 篇，混合標題與摘要)
         # 這裡我們多抓一點資訊，讓 AI 能準確判斷領域
@@ -71,7 +70,7 @@ class BooleanRetrievalGenerator:
             corpus += f"[{i+1}] {title}\nAbs: {abstract}\n\n"
 
         # 2. 設定 Gemini
-        genai.configure(api_key=api_key)
+        genai.configure(api_key=self.api_key)
         model = genai.GenerativeModel('gemini-2.5-flash') # Flash 夠快且通用性好
 
         # 3. 通用型 Prompt (General Purpose Prompt)
