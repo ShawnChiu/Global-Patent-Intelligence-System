@@ -38,7 +38,7 @@ def main():
         
         with st.spinner("正在讀取並渲染圖表 ..."):
             # 4. 讀取並渲染圖表 (View)
-            render_charts_from_files({"ipc": ".data/diagarm_3.html", "country": ".data/diagram_4.html", 'trend_range': ".data/diagram_2.html", 'trend_year': ".data/diagram_1.html"})
+            render_charts_from_files({"ipc": ".data/diagram_3.html", "assignee": ".data/diagram_1.html", 'country': ".data/diagram_4.html", 'trend_range': ".data/diagram_2.html"})
         # with st.spinner("正在進行矩陣維度分析 ..."):
         #     try:
         #         data, state = BooleanRetrievalGenerator.generate_gpss_strategy(df, inputs["llm_key"]);    
