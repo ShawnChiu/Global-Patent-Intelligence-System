@@ -3,7 +3,7 @@ import streamlit as st
 from models.gpss_client import GPSSClient
 from services.analyzer import PatentAnalyzer
 from views.components import render_sidebar, render_charts
-from services.strategy_generator import MatrixStrategy
+from services.strategy_generator import BooleanRetrievalGenerator
 
 # 設定頁面資訊 (這行必須是 main 的第一行 Streamlit 指令)
 st.set_page_config(page_title="專利分析", layout="wide")
@@ -41,7 +41,7 @@ def main():
         
         with st.spinner("正在進行矩陣維度分析 ..."):
             try:
-                data, state = MatrixStrategy.generate_gpss_strategy(df, inputs["llm_key"]);    
+                data, state = BooleanRetrievalGenerator.generate_gpss_strategy(df, inputs["llm_key"]);    
                 if state != "Success":
                     st.error(state)
                     return
