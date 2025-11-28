@@ -35,13 +35,8 @@ def parse_advanced_query(raw_query):
 def render_sidebar():
 
     with st.sidebar:
-        st.header("⚙️ 參數設定")
-        api_key = st.text_input("GPSS API Key", value=DEFAULT_USER_CODE, type="password")
-        qty = st.slider("抓取數量", 10, 5000, 100)
-
-        st.divider()
         st.header("🔍 搜尋條件")
-        expression = st.text_input("輸入布林檢索式", value="HUD OR 抬頭顯示器 OR 平視顯示器 OR ヘッドアップディスプレイ OR 헤드 업 디스플레이", type="default")
+        query = st.text_input("輸入布林檢索式", value="HUD OR 抬頭顯示器 OR 平視顯示器 OR ヘッドアップディスプレイ OR 헤드 업 디스플레이", type="default")
 
         st.divider()
         st.header("🤖 分析設定")
@@ -72,9 +67,7 @@ def render_sidebar():
         submitted = st.button("🚀 開始分析", type="primary")
         
     return {
-        "api_key": api_key, 
-        "expression": expression, 
-        "qty": qty,
+        "query": query, 
         "tech_conf": tech_conf, 
         "effect_conf": effect_conf,
         "matrix_mode": matrix_mode, # 回傳模式

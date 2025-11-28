@@ -1,5 +1,12 @@
 # main.py
+import asyncio
+import sys
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 import streamlit as st
+from playwright.sync_api import sync_playwright
 from models.gpss_client import GPSSClient
 from services.analyzer import PatentAnalyzer
 from views.components import render_sidebar, render_charts
@@ -13,19 +20,17 @@ def main():
     
     # 1. 取得使用者輸入 (View)
     inputs = render_sidebar()
-    
-    if inputs["submitted"]:
-        if not inputs["api_key"]:
-            st.error("請輸入 API Key")
-            return
 
+    playeright = sync_playwright().start()
+    browser = playeright.chromium.launch(headless=False)
+
+    if inputs["submitted"]:
         # 2. 初始化客戶端 (Model)
-        client = GPSSClient(inputs["api_key"])
         
         with st.spinner("正在進行 ETL (Extract-Transform-Load) ..."):
             try:
                 # 3. 獲取數據 (Model)
-                df = client.fetch_data(inputs["expression"], inputs["qty"])
+                df = GPSSClient.fetch_data(inputs["expression"], inputs["qty"])
                 
                 if df.empty:
                     st.warning("查無資料，請放寬搜尋條件。")

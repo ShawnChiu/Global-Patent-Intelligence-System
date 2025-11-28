@@ -1,70 +1,125 @@
 # models/gpss_client.py
-import requests
-import pandas as pd
-from config import API_URL
+from playwright.sync_api import sync_playwright
+import os
+from datetime import datetime
 
 class GPSSClient:
     """負責與 GPSS API 進行通訊的客戶端類別"""
     
-    def __init__(self, api_key):
-        self.api_key = api_key
+    def __init__(self, browser):
+        # 啟動瀏覽器並存入 self
+        self.context = browser.new_context()
+        self.page = self.context.new_page()
+        self.home_url = "https://tiponet.tipo.gov.tw/gpss2/gpsskmc/gpssbkm"
+        self.page.goto(self.home_url)
+        self.page.wait_for_load_state()
+        self.page2 = None
+    
+    def fetch_data(self, query):
+        self.login()
+        self.search(query)
+        self.dedup_by_family()
+        self.dedup_by_search()
+        self.fetch_diagrams()
+        self.add_to_list()
+        self.fetch_names_and_contents()
+        self.add_to_matrix()
+        self.fetch_matrix()
 
-    def fetch_data(self, query, qty):
-        """
-        發送請求並回傳原始 DataFrame
-        """
-        params = {
-            "userCode": self.api_key,
-            "patDB": "TWA,TWB,USA,USB,CNA,CNB,JPA,JPB",
-            "patAG": "A,B",
-            "patTY": "I,M",
-            "expFmt": "json",
-            "expQty": str(qty),
-            "expFld": "TI,AB,IC,AD,PN", # 只取需要的欄位
-            "TI": query,
-            "IC": ""
-        }
 
-        try:
-            response = requests.get(API_URL, params=params, timeout=60)
-            response.raise_for_status() # 檢查 HTTP 錯誤
-            
-            data = response.json()
-            return self._parse_response(data)
-            
-        except Exception as e:
-            raise RuntimeError(f"API 連線失敗: {str(e)}")
+    def login(self):
+        curr_url = "https://tiponet.tipo.gov.tw" + self.page.locator("a:has(span[title='登入'])").get_attribute("href")
+        self.page.goto(curr_url)
+        self.page.wait_for_load_state()
+        self.page.locator("input[name='email']").fill("")
+        self.page.locator("input[type='PASSWORD']").fill("")
+        self.page.wait_for_url(lambda url: url != curr_url, timeout=0)
+        self.page.wait_for_load_state()
+        self.home_url = "https://tiponet.tipo.gov.tw" + self.page.locator(".navbar-header > a").get_attribute("href")
+    
+    def search(self, query):
+        self.page.goto(self.home_url)
+        self.page.wait_for_load_state()
+        curr_url = self.page.url
+        self.page.get_by_role("textbox").fill(query)
+        self.page.locator("input[src*='search_btn.png']").click()
+        self.page.wait_for_load_state()
+        return self.page.url
+    
+    def dedup_by_family(self):
+        self.page.locator("input[value='家族去重']").click()        
+        self.page.wait_for_load_state()
+    
+    def dedup_by_search(self):
+        self.page.locator("input[value='檢索去重']").click()        
+        self.page.wait_for_load_state()
+    
+    def add_to_list(self):
+        self.page.locator("input[title='本次全選']").click()
+        self.page.wait_for_load_state()
+        self.page.locator("input[title='加入標記清單']").click()
+        self.page.wait_for_load_state()
 
-    def _parse_response(self, data):
-        """內部方法：解析 GPSS 特有的巢狀 JSON"""
-        api_resp = data.get("gpss-API", {})
-        status = api_resp.get("status")
+    def fetch_diagrams(self):
+        with self.context.expect_page() as new_page_info:
+            self.page.locator("div.show_chart").click()     
+        self.page2 = new_page_info.value
+        self.page2.wait_for_selector("a.chdw", timeout = 0)
+        buttons = self.page2.locator("a.chdw", has_text="資料表下載").all()
+
+        self.page2.locator("select[name='fld4']").select_option("YP_0")
+        self.page2.locator("select[name='limit4']").select_option("4")
+        self.page2.locator("select[name='fld2']").select_option("IP3")
+        self.page2.locator("select[name='limit2']").select_option("30")
+
+        for i in range(3):
+            with self.page2.expect_download() as download_info:
+                buttons[i].click()
+                self.page2.wait_for_load_state()
+            download = download_info.value
+            file_name = f"diagram_{i+1}.html"
+            destination_path = os.path.join(os.getcwd() + "/.data", file_name)
+            download.save_as(destination_path)
         
-        if status == "fail" or api_resp.get("message") == "No record found":
-            raise ValueError(f"API 錯誤: {api_resp.get('message')}")
+        self.page2.locator("select[name='fld2']").select_option("AY")
+        with self.page2.expect_download() as download_info:
+            buttons[2].click()
+        download = download_info.value
+        file_name = f"diagram_{4}.html"
+        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
+        download.save_as(destination_path)
 
-        raw_list = api_resp.get("patent", {}).get("patentcontent", [])
-        if not raw_list:
-            return pd.DataFrame()
+        self.page2.close()
 
-        # 資料正規化 (Flatten)
-        cleaned_list = []
-        for p in raw_list:
-            cleaned_list.append({
-                "Title": p.get("patent-title", {}).get("title", ""),
-                "Abstract": self._get_text(p.get("abstract", {}).get("p", "")),
-                "Year": p.get("application-reference", {}).get("date", "")[:4],
-                "Country": p.get("publication-reference", {}).get("doc-number", "")[:2],
-                "IPC": self._get_ipc(p.get("classifications-ipc", {}).get("ipc", []))
-            })
-            
-        return pd.DataFrame(cleaned_list)
+    def fetch_names_and_contents(self):
+        curr_url = "https://tiponet.tipo.gov.tw" + self.page.locator("a:has-text('標記清單')").get_attribute("href")
+        self.page2 = self.context.new_page()
+        self.page2.goto(curr_url)
+        self.page2.wait_for_load_state()
+        self.page2.locator("input[title='下載全選']").click()
+        self.page2.wait_for_load_state()
 
-    def _get_text(self, obj):
-        return "".join(obj) if isinstance(obj, list) else str(obj)
+        self.page2.locator("span[data-target='#outpop']").click()
+        self.page2.wait_for_load_state()
+        modal = self.page2.locator("div[id='outpop']")
+        modal.locator("input[value='全不選']").click()
+        modal.locator("input[name='_9_11_S_TI']").click()
+        modal.locator("input[name='_9_11_S_AB']").click()
+        modal.locator("input[title='執行輸出']").click()
+        self.page2.wait_for_load_state(timeout = 0)
+        modal.locator("span[class='modal_close']").click()
 
-    def _get_ipc(self, ipc_list):
-        if isinstance(ipc_list, list) and len(ipc_list) > 0:
-            # 取第一個 IPC 的主類 (例如 G02B)
-            return ipc_list[0].get("keyValue", "").split("/")[0]
-        return "Unknown"
+        self.page2.close()
+
+    def add_to_matrix(self):
+        button = self.page.locator("input[title='檢索歸類']")
+        button.evaluate("element => element.click()")
+        self.page.wait_for_selector("div[class='msgfmt']", timeout = 0)
+        with self.context.expect_page() as new_page_info:
+            self.page.locator("div[class='msgfmt'] a[target='_proj']").click()
+        self.page2 = new_page_info.value
+        self.page2.wait_for_load_state()
+
+
+    def fetch_matrix(self):
+        pass
