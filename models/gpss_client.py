@@ -117,7 +117,14 @@ class GPSSClient:
         modal.locator("input[value='全不選']").click()
         modal.locator("input[name='_9_11_S_TI']").click()
         modal.locator("input[name='_9_11_S_AB']").click()
-        modal.locator("input[title='執行輸出']").click(timeout = 0)
+
+        with self.page2.expect_download() as download_info:
+            modal.locator("input[title='執行輸出']").click(timeout = 0)
+        download = download_info.value
+        file_name = f"contents.xls"
+        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
+        download.save_as(destination_path)
+        
         modal.locator("span[class='modal_close']").click()
 
         self.page2.close()
