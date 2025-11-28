@@ -23,14 +23,10 @@ def main():
     playeright = sync_playwright().start()
     browser = playeright.chromium.launch(headless=False)
 
-    st.success("登入成功！")
     if inputs["submitted"]:
         # 2. 初始化客戶端 (Model)
         
         client = GPSSClient(browser)
-        client.login()
-
-        print("Fetching data...")
         client.fetch_data(inputs["query"])
 
 
