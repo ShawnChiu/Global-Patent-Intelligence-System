@@ -293,5 +293,94 @@ def render_charts_from_files(files_dict):
         else:
             st.info("請上傳 趨勢 統計表")
 
+    # === Tab 5: 技術功效矩陣 (Bubble Chart) ===
     with tab5:
-        st.info("🚧 技術功效矩陣功能開發中")
+        st.subheader("💡 技術功效矩陣")
+        
+        # 1. 檔案讀取 (Result.xls)
+        if files_dict.get("matrix"): # 記得在 sidebar 加入 matrix 的上傳
+            # 使用我們強大的 robust_read_file (如果是在 class 外，直接用 pd.read_csv 搭配 try-except)
+            try:
+                # 這裡假設已經有 parse_html_table 或類似的讀取邏輯
+                # 針對矩陣檔，通常是 CSV，我們直接讀取
+                # 注意：這裡需要處理 header，因為第一列通常是 X 軸標籤
+                df_matrix = pd.read_excel(files_dict["matrix"])
+                
+                # 2. 資料清洗與轉換 (Matrix -> Long Format)
+                # 假設結構：
+                # Row 0: [Header, Header, Tech_A, Tech_B, Tech_C...] (X軸標籤)
+                # Row 1: [Header, Header, Search_A, Search_B...] (搜尋語法，通常忽略)
+                # Row 2+: [Efficacy_X, Query_X, 10, 5, 2...] (Y軸標籤 + 數據)
+                
+                # 定位數據起始點 (這部分可能需要根據實際 CSV 微調)
+                # 觀察你的 CSV preview:
+                # Row 0: Unnamed, 技術名稱, i1, i2...
+                # Row 1: 功效名稱, 檢索條件, ii1, ii2... (這是真正的 Header?)
+                # Row 2+: j1, jj1, 0, 0...
+                
+                # 抓取 X 軸標籤 (技術手段) - 從 Row 0 的第 3 欄開始 (Index 2)
+                x_labels = df_matrix.iloc[0, 2:].values.tolist()
+                
+                # 抓取數據與 Y 軸標籤 (功效) - 從 Row 2 開始
+                data_rows = df_matrix.iloc[2:]
+                
+                plot_data = []
+                for _, row in data_rows.iterrows():
+                    y_label = str(row[0]) # 第 1 欄是功效名稱 (Y軸)
+                    # 第 3 欄開始是數值
+                    counts = row[2:].values
+                    
+                    for x_label, count in zip(x_labels, counts):
+                        try:
+                            # 轉數字，處理可能的 "1,234" 或空值
+                            val = float(str(count).replace(',', ''))
+                        except:
+                            val = 0
+                        
+                        if val > 0: # 只記錄有數值的點
+                            plot_data.append({
+                                'Technology': x_label, # X軸
+                                'Efficacy': y_label,   # Y軸
+                                'Count': val           # 氣泡大小
+                            })
+                
+                df_plot = pd.DataFrame(plot_data)
+                
+                if not df_plot.empty:
+                    # 3. 繪製泡泡圖
+                    fig = px.scatter(
+                        df_plot, 
+                        x='Technology', 
+                        y='Efficacy', 
+                        size='Count', 
+                        color='Efficacy', # 依據 Y 軸分色，容易辨識
+                        hover_name='Count',
+                        title="技術功效矩陣分析",
+                        size_max=60, # 調整最大氣泡尺寸
+                        text='Count' # 在氣泡中顯示數字
+                    )
+                    
+                    # 優化圖表佈局
+                    fig.update_layout(
+                        xaxis_title="技術手段 (Technology)",
+                        yaxis_title="達成功效 (Efficacy)",
+                        xaxis={'side': 'top'}, # X軸標籤放到上方，比較像矩陣
+                        height=600, # 加高圖表
+                        # plot_bgcolor='white',
+                        showlegend=False
+                    )
+                    
+                    # 讓氣泡內的文字置中
+                    fig.update_traces(textposition='middle center')
+                    
+                    st.plotly_chart(fig, theme="streamlit", width="stretch")
+                    
+                    with st.expander("查看原始數據矩陣"):
+                        st.dataframe(df_matrix)
+                else:
+                    st.warning("矩陣中無有效數據 (數值均為 0)")
+                    
+            except Exception as e:
+                st.error(f"矩陣解析失敗: {str(e)}")
+        else:
+            st.info("請上傳 技術功效矩陣表 (Result.xls)")
