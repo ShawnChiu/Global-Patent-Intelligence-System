@@ -45,15 +45,16 @@ def main():
             except Exception as e:
                 st.error(f"系統發生錯誤: {str(e)}")
 
-        with st.spinner("正在進行矩陣維度分析 ..."):
-            try:
-                data, state = gemini_client.generate_gpss_strategy(".data\contents.xls");    
-                if state != "Success":
-                    st.error(state)
-                    return
-                st.success(data);
-            except Exception as e:
-                st.error(f"系統發生錯誤: {str(e)}")
+        if inputs["matrix_mode"] == "AI 語意推論 (Gemini LLM)":
+            with st.spinner("正在進行矩陣維度分析 ..."):
+                try:
+                    data, state = gemini_client.generate_gpss_strategy(".data\contents.xls");    
+                    if state != "Success":
+                        st.error(state)
+                        return
+                    st.success(data);
+                except Exception as e:
+                    st.error(f"系統發生錯誤: {str(e)}")
 
         with st.spinner("正在讀取並渲染圖表 ..."):
             # 4. 讀取並渲染圖表 (View)
