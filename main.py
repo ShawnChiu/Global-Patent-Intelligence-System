@@ -27,7 +27,6 @@ def main():
     if inputs["submitted"]:
         # 2. 初始化客戶端 (Model)
         gemini_client = GeminiClient(inputs["llm_key"])
-
         if inputs["search_mode"] != "搜尋布林檢索式":
             with st.spinner("正在生成布林檢索式，請稍候..."):
                 query = gemini_client.convert_topic_to_query(inputs["query"])
@@ -45,19 +44,20 @@ def main():
                 
             except Exception as e:
                 st.error(f"系統發生錯誤: {str(e)}")
-        
+
+        with st.spinner("正在進行矩陣維度分析 ..."):
+            try:
+                data, state = gemini_client.generate_gpss_strategy(".data\contents.xls");    
+                if state != "Success":
+                    st.error(state)
+                    return
+                st.success(data);
+            except Exception as e:
+                st.error(f"系統發生錯誤: {str(e)}")
+
         with st.spinner("正在讀取並渲染圖表 ..."):
             # 4. 讀取並渲染圖表 (View)
             render_charts_from_files({"ipc": ".data/diagram_4.html", "assignee": ".data/diagram_2.html", 'country': ".data/diagram_3.html", 'trend_range': ".data/diagram_1.html"})
-        # with st.spinner("正在進行矩陣維度分析 ..."):
-        #     try:
-        #         data, state = BooleanRetrievalGenerator.generate_gpss_strategy(df, inputs["llm_key"]);    
-        #         if state != "Success":
-        #             st.error(state)
-        #             return
-        #         st.success(data);
-        #     except Exception as e:
-        #         st.error(f"系統發生錯誤: {str(e)}")
-
+        
 if __name__ == "__main__":
     main()
