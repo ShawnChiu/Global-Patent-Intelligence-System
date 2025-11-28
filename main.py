@@ -9,7 +9,7 @@ import streamlit as st
 from playwright.sync_api import sync_playwright
 from models.gpss_client import GPSSClient
 from services.analyzer import PatentAnalyzer
-from views.components import render_sidebar, render_charts
+from views.components import render_sidebar, render_charts_from_files
 from services.strategy_generator import BooleanRetrievalGenerator
 
 # 設定頁面資訊 (這行必須是 main 的第一行 Streamlit 指令)
@@ -26,33 +26,28 @@ def main():
 
     if inputs["submitted"]:
         # 2. 初始化客戶端 (Model)
-        
+        client = GPSSClient(browser)
+
         with st.spinner("正在進行 ETL (Extract-Transform-Load) ..."):
             try:
                 # 3. 獲取數據 (Model)
-                df = GPSSClient.fetch_data(inputs["expression"], inputs["qty"])
+                client.fetch_data(inputs["query"])
                 
-                if df.empty:
-                    st.warning("查無資料，請放寬搜尋條件。")
-                else:
-                    st.success(f"ETL 完成！共處理 {len(df)} 筆專利數據。")
-
-                    # 顯示原始資料表格 (Optional)
-                    with st.expander("檢視原始數據"):
-                        st.dataframe(df)
-
             except Exception as e:
                 st.error(f"系統發生錯誤: {str(e)}")
         
-        with st.spinner("正在進行矩陣維度分析 ..."):
-            try:
-                data, state = BooleanRetrievalGenerator.generate_gpss_strategy(df, inputs["llm_key"]);    
-                if state != "Success":
-                    st.error(state)
-                    return
-                st.success(data);
-            except Exception as e:
-                st.error(f"系統發生錯誤: {str(e)}")
+        with st.spinner("正在讀取並渲染圖表 ..."):
+            # 4. 讀取並渲染圖表 (View)
+            render_charts_from_files(["diagarm_1.html", "diagram_2.html", "diagram_3.html", "diagram_4.html"])
+        # with st.spinner("正在進行矩陣維度分析 ..."):
+        #     try:
+        #         data, state = BooleanRetrievalGenerator.generate_gpss_strategy(df, inputs["llm_key"]);    
+        #         if state != "Success":
+        #             st.error(state)
+        #             return
+        #         st.success(data);
+        #     except Exception as e:
+        #         st.error(f"系統發生錯誤: {str(e)}")
 
 if __name__ == "__main__":
     main()
