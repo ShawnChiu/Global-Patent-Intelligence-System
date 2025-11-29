@@ -11,6 +11,7 @@ from models.gpss_client import GPSSClient
 from services.analyzer import PatentAnalyzer
 from views.components import render_sidebar, render_charts_from_files
 from models.gemini_client import GeminiClient
+import json
 
 # 設定頁面資訊 (這行必須是 main 的第一行 Streamlit 指令)
 st.set_page_config(page_title="專利分析", layout="wide")
@@ -52,7 +53,8 @@ def main():
                     if state != "Success":
                         st.error(state)
                         return
-                    st.success(data);
+                    st.success(data)
+                    gpss_client.fill_matrix_form(data)
                 except Exception as e:
                     st.error(f"系統發生錯誤: {str(e)}")
 

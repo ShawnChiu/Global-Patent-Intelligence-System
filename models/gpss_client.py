@@ -138,8 +138,9 @@ class GPSSClient:
             self.page.locator("div[class='msgfmt'] a[target='_proj']").click()
         self.page2 = new_page_info.value
         self.page2.wait_for_load_state()
-        with self.page2.expect_page() as new_page_info:
+        with self.context.expect_page() as new_page_info:
             self.page2.locator("span[title='Matrix']").click()
+        self.page2.close()
         self.page2 = new_page_info.value
 
     def fill_matrix_form(self, json_data):
@@ -147,13 +148,15 @@ class GPSSClient:
         將 JSON 資料填入技術功效矩陣表單
         :param json_data: 包含 technologies 和 efficacies 的字典
         """
-        # 1. 填寫【技術名稱】與【技術檢索條件】 (橫向 X 軸)
-        # HTML name 格式: mtr/tech/name01, mtr/tech/term01 ... 到 06
         technologies = json_data.get("technologies", [])
-
+        efficacies = json_data.get("efficacies", [])
         for _ in range(len(technologies) - 3):
             self.page2.locator("span[id='tech_add']").click()
+        for i in range(len(efficacies) - 3):
+            self.page2.locator("span[id='func_add']").click()
 
+        # 1. 填寫【技術名稱】與【技術檢索條件】 (橫向 X 軸)
+        # HTML name 格式: mtr/tech/name01, mtr/tech/term01 ... 到 06
         for i, tech in enumerate(technologies):
             # 索引從 0 開始，但 HTML name 是從 01 開始，所以要 i+1
             index_str = f"{i+1:02d}" # 格式化成 "01", "02"...
@@ -166,11 +169,6 @@ class GPSSClient:
 
         # 2. 填寫【功效名稱】與【功效檢索條件】 (縱向 Y 軸)
         # HTML name 格式: mtr/func/name01, mtr/func/term01 ... 到 06
-        efficacies = json_data.get("efficacies", [])
-        
-        for _ in range(len(efficacies) - 3):
-            self.page2.locator("span[id='func_add']").click()
-
         for i, eff in enumerate(efficacies):
             index_str = f"{i+1:02d}"
             
@@ -180,9 +178,13 @@ class GPSSClient:
             # 填寫功效檢索條件 (Boolean)
             self.page2.locator(f"textarea[name='mtr/func/term{index_str}']").fill(eff["boolean"])
 
-        # 3. 點擊「進行分析」按鈕
-        # 注意：這個按鈕會觸發後端運算，建議加上等待導航
-        with self.page2.expect_navigation():
-            self.page2.locator("input[value='進行分析']").click()
-            
-        print("矩陣表單填寫完成並已送出！")
+        self.page2.locator("body").click()
+        self.page2.locator("input[value='進行分析']").click()
+        self.page2.locator("select[name='exp_format']").select_option("EXCEL")
+
+        with self.page2.expect_download(timeout = 0) as download_info:
+            self.page2.locator("input[title='Export']").click(timeout = 0)
+        download = download_info.value
+        file_name = f"matrix_form.xls"
+        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
+        download.save_as(destination_path)

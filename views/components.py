@@ -30,12 +30,13 @@ def render_sidebar():
         )
         query = ""
         if search_mode == "搜尋布林檢索式":
-            query = st.text_input("輸入布林檢索式", value="HUD OR 抬頭顯示器 OR 平視顯示器 OR ヘッドアップディスプレイ OR 헤드 업 디스플레이", type="default")
+            query = st.text_input("輸入布林檢索式", value="(IGS OR \"International Games System\" OR 鈊象 OR \"インターナショナル ゲーム システム\" OR \"인터내셔널 게임 시스템\")@TI,AB,CL,DE AND ID=:20241231 AND (IC=A63F* OR IC=G07F* OR IC=G06F*)"
+            "", type="default")
         else:
             st.markdown("""
             **🧠 AI 自動生成布林檢索式** 系統將根據主題自動生成複雜的布林檢索式
             """)
-            query = st.text_input("輸入技術主題", value="HUD 抬頭顯示器", type="default")
+            query = st.text_input("輸入技術主題", value="鈊象", type="default")
 
         st.divider()
         st.header("🤖 分析設定")
