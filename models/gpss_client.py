@@ -2,6 +2,10 @@
 from playwright.sync_api import sync_playwright
 import os
 import json
+import easyocr
+from PIL import Image, ImageOps
+import io
+import numpy as np
 
 class GPSSClient:
     """負責與 GPSS API 進行通訊的客戶端類別"""
@@ -14,6 +18,7 @@ class GPSSClient:
         self.page.goto(self.home_url)
         self.page.wait_for_load_state()
         self.page2 = None
+        self.reader = easyocr.Reader(['en'], gpu=True)
     
     def fetch_data(self, query):
         self.login()
@@ -32,6 +37,27 @@ class GPSSClient:
         self.page.wait_for_load_state()
         self.page.locator("input[name='email']").fill("")
         self.page.locator("input[type='PASSWORD']").fill("")
+
+        auth = ""
+        imgs = self.page.locator("table[class='rand'] img").all()
+        for img in imgs:
+            img_bytes = img.screenshot()
+            original_image = Image.open(io.BytesIO(img_bytes)).convert('L')
+            scale_factor = 5
+            new_width = original_image.width * scale_factor
+            new_height = original_image.height * scale_factor
+            resized_image = original_image.resize((new_width, new_height), Image.Resampling.NEAREST)
+            bordered_image = ImageOps.expand(resized_image, border=20, fill='white')
+            image_np = np.array(bordered_image)
+            result = self.reader.readtext(image_np, detail=0)
+            if result:
+                auth += result[0]
+            else:
+                auth += "?"
+        print(f"解析結果: {auth}")
+
+        self.page.locator("input[name='sys/00/rand']").fill(auth)
+
         self.page.wait_for_url(lambda url: url != curr_url, timeout=0)
         self.page.wait_for_load_state()
         self.home_url = "https://tiponet.tipo.gov.tw" + self.page.locator(".navbar-header > a").get_attribute("href")
