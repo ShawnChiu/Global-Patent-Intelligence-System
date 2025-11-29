@@ -294,94 +294,131 @@ def render_charts_from_files(files_dict):
         else:
             st.info("請上傳 趨勢 統計表")
 
-    # === Tab 5: 技術功效矩陣 (Bubble Chart) ===
+    # === Tab 5: 技術功效矩陣 (Adaptive Bubble Chart) ===
     with tab5:
         st.subheader("💡 技術功效矩陣")
         
-        # 1. 檔案讀取 (Result.xls)
-        if files_dict.get("matrix"): # 記得在 sidebar 加入 matrix 的上傳
-            # 使用我們強大的 robust_read_file (如果是在 class 外，直接用 pd.read_csv 搭配 try-except)
+        if files_dict.get("matrix"):
             try:
-                # 這裡假設已經有 parse_html_table 或類似的讀取邏輯
-                # 針對矩陣檔，通常是 CSV，我們直接讀取
-                # 注意：這裡需要處理 header，因為第一列通常是 X 軸標籤
-                df_matrix = pd.read_excel(files_dict["matrix"])
+                # 1. 讀取檔案
+                # 使用 header=None 讀取，方便我們自己定位
+                df_matrix = pd.read_excel(files_dict["matrix"], header=None)
                 
-                # 2. 資料清洗與轉換 (Matrix -> Long Format)
-                # 假設結構：
-                # Row 0: [Header, Header, Tech_A, Tech_B, Tech_C...] (X軸標籤)
-                # Row 1: [Header, Header, Search_A, Search_B...] (搜尋語法，通常忽略)
-                # Row 2+: [Efficacy_X, Query_X, 10, 5, 2...] (Y軸標籤 + 數據)
+                # 2. 解析資料 (Data Parsing)
+                # 假設 Row 0 是 X 軸標籤 (從第3格開始)
+                x_labels = df_matrix.iloc[0, 2:].fillna("Unknown").astype(str).values.tolist()
                 
-                # 定位數據起始點 (這部分可能需要根據實際 CSV 微調)
-                # 觀察你的 CSV preview:
-                # Row 0: Unnamed, 技術名稱, i1, i2...
-                # Row 1: 功效名稱, 檢索條件, ii1, ii2... (這是真正的 Header?)
-                # Row 2+: j1, jj1, 0, 0...
-                
-                # 抓取 X 軸標籤 (技術手段) - 從 Row 0 的第 3 欄開始 (Index 2)
-                x_labels = df_matrix.iloc[0, 2:].values.tolist()
-                
-                # 抓取數據與 Y 軸標籤 (功效) - 從 Row 2 開始
+                # 假設 Row 2 開始是數據 (Y軸標籤在第1格)
                 data_rows = df_matrix.iloc[2:]
                 
                 plot_data = []
+                # 為了確保 Y 軸順序正確 (跟 Excel 一樣由上到下)，我們可以用 enumerate
                 for _, row in data_rows.iterrows():
-                    y_label = str(row[0]) # 第 1 欄是功效名稱 (Y軸)
-                    # 第 3 欄開始是數值
+                    y_label = str(row[0]) # 第 1 欄是功效名稱
                     counts = row[2:].values
                     
                     for x_label, count in zip(x_labels, counts):
                         try:
-                            # 轉數字，處理可能的 "1,234" 或空值
                             val = float(str(count).replace(',', ''))
                         except:
                             val = 0
                         
-                        if val > 0: # 只記錄有數值的點
+                        if val > 0:
                             plot_data.append({
-                                'Technology': x_label, # X軸
-                                'Efficacy': y_label,   # Y軸
-                                'Count': val           # 氣泡大小
+                                'Technology': x_label,
+                                'Efficacy': y_label,
+                                'Count': val
                             })
                 
                 df_plot = pd.DataFrame(plot_data)
                 
                 if not df_plot.empty:
-                    # 3. 繪製泡泡圖
+                    # --- 3. 智慧版面計算 (Adaptive Layout Calculation) ---
+                    
+                    # 計算維度
+                    n_x = len(x_labels) # X軸有多少技術
+                    n_y = len(data_rows) # Y軸有多少功效
+                    
+                    # 規則 A: 動態高度
+                    # 基礎高度 400px，每多一個 Y 軸項目增加 60px
+                    # 這樣即使有 20 個功效，圖表也會自動變很長，不會擠在一起
+                    dynamic_height = max(500, 200 + (n_y * 60))
+                    
+                    # 規則 B: 動態泡泡大小
+                    # 如果格子很密 (例如 10x10)，泡泡要小一點才不會打架
+                    # 如果格子很空 (例如 3x3)，泡泡可以大一點比較氣派
+                    density_factor = max(n_x, n_y)
+                    if density_factor > 15:
+                        dynamic_size_max = 30 # 密集恐懼症，縮小
+                    elif density_factor > 8:
+                        dynamic_size_max = 40 # 中等
+                    else:
+                        dynamic_size_max = 50 # 疏鬆，大泡泡
+
+                    # 規則 C: 處理標籤過長
+                    # 我們將使用 automargin，但也可以截斷過長的文字
+                    def truncate_label(text, limit=15):
+                        return text[:limit] + "..." if len(str(text)) > limit else str(text)
+
+                    # 4. 繪圖
                     fig = px.scatter(
                         df_plot, 
                         x='Technology', 
                         y='Efficacy', 
                         size='Count', 
-                        color='Efficacy', # 依據 Y 軸分色，容易辨識
+                        color='Efficacy',
                         hover_name='Count',
-                        title="技術功效矩陣分析",
-                        size_max=60, # 調整最大氣泡尺寸
-                        text='Count' # 在氣泡中顯示數字
+                        title=f"技術功效矩陣 ({n_x}x{n_y})",
+                        size_max=dynamic_size_max, # 應用動態大小
+                        text='Count'
                     )
-                    
-                    # 優化圖表佈局
+
                     fig.update_layout(
-                        xaxis_title="技術手段 (Technology)",
-                        yaxis_title="達成功效 (Efficacy)",
-                        xaxis={'side': 'top'}, # X軸標籤放到上方，比較像矩陣
-                        height=600, # 加高圖表
-                        # plot_bgcolor='white',
+                        # 移除軸標題，節省空間
+                        xaxis_title="", 
+                        yaxis_title="",
+                        
+                        # X軸設定 (上方顯示)
+                        xaxis={
+                            'side': 'top',
+                            'tickangle': -45, # 傾斜 45 度
+                            'dtick': 1,       # 顯示所有刻度
+                            'automargin': True, # [關鍵] 自動調整邊距以容納長文字
+                            'fixedrange': True  # 禁止縮放軸，避免跑版
+                        },
+                        
+                        # Y軸設定
+                        yaxis={
+                            'autorange': "reversed", # 讓表格第一項在最上面
+                            'dtick': 1,
+                            'automargin': True, # [關鍵] 自動調整邊距
+                            'fixedrange': True
+                        },
+                        
+                        # 應用動態高度
+                        height=dynamic_height,
+                        
+                        # 邊距 (留給 automargin 發揮，這裡只給最小安全距離)
+                        margin=dict(l=20, r=20, t=20, b=20),
+                        
                         showlegend=False
                     )
                     
-                    # 讓氣泡內的文字置中
-                    fig.update_traces(textposition='middle center')
+                    # 優化文字顯示
+                    fig.update_traces(
+                        textposition='middle center',
+                        textfont={'color': 'white', 'weight': 'bold', 'size': 12}
+                    )
                     
-                    st.plotly_chart(fig, theme="streamlit", width="stretch")
+                    # [關鍵] use_container_width=True 會自動填滿網頁寬度
+                    st.plotly_chart(fig, use_container_width=True)
                     
                     with st.expander("查看原始數據矩陣"):
                         st.dataframe(df_matrix)
                 else:
-                    st.warning("矩陣中無有效數據 (數值均為 0)")
+                    st.warning("⚠️ 矩陣數據為空 (所有數值皆為 0)")
                     
             except Exception as e:
-                st.error(f"矩陣解析失敗: {str(e)}")
+                st.error(f"矩陣解析錯誤: {str(e)}")
         else:
-            st.info("請上傳 技術功效矩陣表 (Result.xls)")
+            st.info("👈 請在左側上傳 `Result.xls` (矩陣分析結果)")
