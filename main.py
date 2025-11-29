@@ -36,7 +36,7 @@ def main():
         else:
             query = inputs["query"]
 
-        gpss_client = GPSSClient(browser)
+        gpss_client = GPSSClient(browser, inputs["user"], inputs["password"])
 
         with st.spinner("正在進行 ETL (Extract-Transform-Load) ..."):
             try:

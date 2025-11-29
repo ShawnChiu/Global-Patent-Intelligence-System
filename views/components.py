@@ -22,6 +22,11 @@ FIELD_OPTS = {
 
 def render_sidebar():
     with st.sidebar:
+        st.header("🌸 GPSS 帳號密碼")
+
+        user = st.text_input("GPSS 使用者代碼", value="", type="default", placeholder="輸入你的 GPSS 使用者代碼")
+        password = st.text_input("GPSS 密碼", value="", type="password", placeholder="輸入你的 GPSS 密碼")
+
         st.header("🔍 搜尋條件")
 
         search_mode = st.radio(
@@ -71,6 +76,8 @@ def render_sidebar():
         submitted = st.button("🚀 開始分析", type="primary")
         
     return {
+        "user": user,
+        "password": password,
         "query": query, 
         "tech_conf": tech_conf, 
         "effect_conf": effect_conf,
