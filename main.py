@@ -53,10 +53,7 @@ def main():
                     if state != "Success":
                         st.error(state)
                         return
-                    st.success(data)
                     gpss_client.fill_matrix_form(data)
-                    st.success(data);
-                    gpss_client.fill_matrix_form(data);
                 except Exception as e:
                     st.error(f"系統發生錯誤: {str(e)}")
         else:
@@ -94,7 +91,7 @@ def main():
 
         with st.spinner("正在讀取並渲染圖表 ..."):
             # 4. 讀取並渲染圖表 (View)
-            render_charts_from_files({"ipc": ".data/diagram_4.html", "assignee": ".data/diagram_2.html", 'country': ".data/diagram_3.html", 'trend_range': ".data/diagram_1.html", "matrix": ".data\Result (1).xls"})
+            render_charts_from_files({"ipc": ".data/diagram_4.html", "assignee": ".data/diagram_2.html", 'country': ".data/diagram_3.html", 'trend_range': ".data/diagram_1.html", "matrix": ".data\matrix_form.xls"})
         
 if __name__ == "__main__":
     main()
