@@ -53,8 +53,41 @@ def main():
                         st.error(state)
                         return
                     st.success(data);
+                    gpss_client.fill_matrix_form(data);
                 except Exception as e:
                     st.error(f"系統發生錯誤: {str(e)}")
+        else:
+            def parse_manual_input(text_block):
+                """
+                將 "Label: (Query)" 格式的多行字串轉換為 list of dicts
+                """
+                items = []
+                if not text_block: 
+                    return items
+                    
+                # 逐行處理
+                for line in text_block.strip().split('\n'):
+                    line = line.strip()
+                    if not line: continue  # 跳過空行
+                    
+                    # 尋找第一個冒號 (:) 來切割 Label 與 Boolean String
+                    if ':' in line:
+                        parts = line.split(':', 1) # 只切第一刀
+                        label = parts[0].strip()
+                        query = parts[1].strip()
+                        
+                        items.append({
+                            "label": label,
+                            "boolean": query
+                        })
+                        
+                return items
+            
+            gpss_client.fill_matrix_form({
+                "domain_detected": "Manual Input (手動定義)",
+                "technologies": parse_manual_input(inputs["tech_conf"]),
+                "efficacies": parse_manual_input(inputs["effect_conf"])
+            })
 
         with st.spinner("正在讀取並渲染圖表 ..."):
             # 4. 讀取並渲染圖表 (View)
