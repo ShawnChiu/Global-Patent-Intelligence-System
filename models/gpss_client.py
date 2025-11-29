@@ -10,7 +10,7 @@ import numpy as np
 class GPSSClient:
     """負責與 GPSS API 進行通訊的客戶端類別"""
     
-    def __init__(self, browser):
+    def __init__(self, browser, account, password):
         # 啟動瀏覽器並存入 self
         self.context = browser.new_context()
         self.page = self.context.new_page()
@@ -19,6 +19,8 @@ class GPSSClient:
         self.page.wait_for_load_state()
         self.page2 = None
         self.reader = easyocr.Reader(['en'], gpu=True)
+        self.account = account
+        self.password = password
     
     def fetch_data(self, query):
         self.login()
@@ -35,8 +37,8 @@ class GPSSClient:
         curr_url = "https://tiponet.tipo.gov.tw" + self.page.locator("a:has(span[title='登入'])").get_attribute("href")
         self.page.goto(curr_url)
         self.page.wait_for_load_state()
-        self.page.locator("input[name='email']").fill("")
-        self.page.locator("input[type='PASSWORD']").fill("")
+        self.page.locator("input[name='email']").fill(self.account)
+        self.page.locator("input[type='PASSWORD']").fill(self.password)
 
         auth = ""
         imgs = self.page.locator("table[class='rand'] img").all()
