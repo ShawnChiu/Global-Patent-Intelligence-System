@@ -138,8 +138,8 @@ class GPSSClient:
             self.page.locator("div[class='msgfmt'] a[target='_proj']").click()
         self.page2 = new_page_info.value
         self.page2.wait_for_load_state()
-        with self.context.expect_page() as new_page_info:
-            self.page2.locator("span[title='Matrix']").click()
+        with self.context.expect_page(timeout = 0) as new_page_info:
+            self.page2.locator("span[title='Matrix']").click(timeout = 0)
         self.page2.close()
         self.page2 = new_page_info.value
 
