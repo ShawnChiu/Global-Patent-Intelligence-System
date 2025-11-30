@@ -9,6 +9,7 @@ import streamlit as st
 from playwright.sync_api import sync_playwright
 from models.gpss_client import GPSSClient
 from services.analyzer import PatentAnalyzer
+from services.gen_report import ReportGenrator
 from views.components import render_sidebar, render_charts_from_files
 from models.gemini_client import GeminiClient
 import json
@@ -25,8 +26,7 @@ def main():
     playeright = sync_playwright().start()
     browser = playeright.chromium.launch(headless=False)
 
-    if inputs["submitted"]:
-        # 2. 初始化客戶端 (Model)
+    if inputs["submitted"]:        # 2. 初始化客戶端 (Model)
         gemini_client = GeminiClient(inputs["llm_key"])
         if inputs["search_mode"] != "搜尋布林檢索式":
             with st.spinner("正在生成布林檢索式，請稍候..."):
@@ -46,14 +46,15 @@ def main():
             except Exception as e:
                 st.error(f"系統發生錯誤: {str(e)}")
 
+        matrix_json = []
         if inputs["matrix_mode"] == "AI 語意推論 (Gemini LLM)":
             with st.spinner("正在進行矩陣維度分析 ..."):
                 try:
-                    data, state = gemini_client.generate_gpss_strategy(".data\contents.xls");    
+                    matrix_json, state = gemini_client.generate_gpss_strategy(".data\contents.xls");    
                     if state != "Success":
                         st.error(state)
                         return
-                    gpss_client.fill_matrix_form(data)
+                    gpss_client.fill_matrix_form(matrix_json)
                 except Exception as e:
                     st.error(f"系統發生錯誤: {str(e)}")
         else:
@@ -82,16 +83,19 @@ def main():
                         })
                         
                 return items
-            
-            gpss_client.fill_matrix_form({
+            matrix_json = {
                 "domain_detected": "Manual Input (手動定義)",
                 "technologies": parse_manual_input(inputs["tech_conf"]),
                 "efficacies": parse_manual_input(inputs["effect_conf"])
-            })
+            }
+            gpss_client.fill_matrix_form(matrix_json)
 
         with st.spinner("正在讀取並渲染圖表 ..."):
             # 4. 讀取並渲染圖表 (View)
             render_charts_from_files({"ipc": ".data/diagram_4.html", "assignee": ".data/diagram_2.html", 'country': ".data/diagram_3.html", 'trend_range': ".data/diagram_1.html", "matrix": ".data\matrix_form.xls"})
+        regen = ReportGenrator(search_result=gpss_client.get_results(), query=query, matrix_json=matrix_json)
+        regen.gen_report()
+        
         
 if __name__ == "__main__":
     main()

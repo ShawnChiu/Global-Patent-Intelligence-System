@@ -2,217 +2,180 @@
 from playwright.sync_api import sync_playwright
 import os
 import json
-import easyocr
-from PIL import Image, ImageOps
-import io
-import numpy as np
+from services.captcha import CaptchaSolver
+import re
+
 
 class GPSSClient:
-    """負責與 GPSS API 進行通訊的客戶端類別"""
     
     def __init__(self, browser, account, password):
-        # 啟動瀏覽器並存入 self
         self.context = browser.new_context()
-        self.page = self.context.new_page()
+        self.search_page = self.context.new_page()
+
         self.home_url = "https://tiponet.tipo.gov.tw/gpss2/gpsskmc/gpssbkm"
-        self.page.goto(self.home_url)
-        self.page.wait_for_load_state()
-        self.page2 = None
-        self.reader = easyocr.Reader(['en'], gpu=True)
+        self.login_url = "https://tiponet.tipo.gov.tw/gpss2/gpsskmc/gpssbkm"
+        self.search_url = "https://tiponet.tipo.gov.tw/gpss2/gpsskmc/gpssbkm"
+        self.list_url = "https://tiponet.tipo.gov.tw/gpss2/gpsskmc/gpssbkm"
+        self.diagrams_url = "https://tiponet.tipo.gov.tw/gpss2/gpsskmc/gpssbkm"
+
         self.account = account
         self.password = password
+
+        self.search_result = None
+        self.dedup_result = None
+
+    def download_data(self, filename, trigger, page):
+        with page.expect_download(timeout = 0) as download_info:
+            trigger.click(timeout = 0)
+        download = download_info.value
+        destination_path = os.path.join(os.getcwd() + "/.data", filename)
+        download.save_as(destination_path)
     
+    def open_new_page(self, trigger):
+        with self.context.expect_page(timeout=0) as new_page_info:
+            trigger.click(timeout=0)
+        return new_page_info.value
+
+    def get_num(self, trigger):
+        text = trigger.text_content()
+        text = re.sub(r'[^\d.]', '', text)
+        return int(float(text))
+
     def fetch_data(self, query):
         self.login()
         self.search(query)
-        self.dedup_by_family()
-        self.dedup_by_search()
         self.fetch_diagrams()
-        self.add_to_list()
         self.fetch_names_and_contents()
-        self.add_to_matrix()
-        self.go_to_matrix()
 
     def login(self):
-        curr_url = "https://tiponet.tipo.gov.tw" + self.page.locator("a:has(span[title='登入'])").get_attribute("href")
-        self.page.goto(curr_url)
-        self.page.wait_for_load_state()
-        self.page.locator("input[name='email']").fill(self.account)
-        self.page.locator("input[type='PASSWORD']").fill(self.password)
+        page = self.context.new_page()
+        page.goto(self.home_url)
+        page.wait_for_load_state()
+        self.login_url = "https://tiponet.tipo.gov.tw" + page.locator("a:has(span[title='登入'])").get_attribute("href")
+        page.goto(self.login_url)
+        page.wait_for_load_state()
+        page.locator("input[name='email']").fill(self.account)
+        page.locator("input[type='PASSWORD']").fill(self.password)
 
         auth = ""
-        imgs = self.page.locator("table[class='rand'] img").all()
+        imgs = page.locator("table[class='rand'] img").all()
         for img in imgs:
-            img_bytes = img.screenshot()
-            original_image = Image.open(io.BytesIO(img_bytes)).convert('L')
-            scale_factor = 5
-            new_width = original_image.width * scale_factor
-            new_height = original_image.height * scale_factor
-            resized_image = original_image.resize((new_width, new_height), Image.Resampling.NEAREST)
-            bordered_image = ImageOps.expand(resized_image, border=20, fill='white')
-            image_np = np.array(bordered_image)
-            result = self.reader.readtext(image_np, detail=0)
-            if result:
-                auth += result[0]
-            else:
-                auth += "?"
-        print(f"解析結果: {auth}")
+            img_bytes = img.screenshot()            
+            auth += CaptchaSolver.solve(img_bytes)
 
-        self.page.locator("input[name='sys/00/rand']").fill(auth)
-
-        self.page.wait_for_url(lambda url: url != curr_url, timeout=0)
-        self.page.wait_for_load_state()
-        self.home_url = "https://tiponet.tipo.gov.tw" + self.page.locator(".navbar-header > a").get_attribute("href")
+        page.locator("input[name='sys/00/rand']").fill(auth)
+        page.wait_for_url(lambda url: url != self.login_url, timeout=0)
+        page.wait_for_load_state()
+        self.home_url = "https://tiponet.tipo.gov.tw" + page.locator(".navbar-header > a").get_attribute("href")
+        
+        page.close()
     
     def search(self, query):
-        self.page.goto(self.home_url)
-        self.page.wait_for_load_state()
-        curr_url = self.page.url
-        self.page.get_by_role("textbox").fill(query)
-        self.page.locator("input[src*='search_btn.png']").click()
-        self.page.wait_for_load_state()
-        return self.page.url
-    
-    def dedup_by_family(self):
-        self.page.locator("input[value='家族去重']").click(timeout = 0)        
-    
-    def dedup_by_search(self):
-        self.page.locator("input[value='檢索去重']").click(timeout = 0)        
-    
-    def add_to_list(self):
-        self.page.locator("input[title='本次全選']").click()
-        self.page.wait_for_load_state()
-        self.page.locator("input[title='加入標記清單']").click()
-        self.page.wait_for_load_state()
+        self.search_page.goto(self.home_url)
+        self.search_page.wait_for_load_state()
+
+        self.search_page.get_by_role("textbox").fill(query)
+        self.search_page.locator("input[src*='search_btn.png']").click()
+        self.search_page.wait_for_load_state()
+
+        self.search_page.locator("div[id='subdbdiv'] span[class='R_rec']").first.click()
+
+        self.search_result = self.get_num(self.search_page.locator("font[class='numfmt']").first)
+
+        self.search_page.locator("input[value='家族去重']").click(timeout = 0)
+        self.search_page.locator("input[value='檢索去重']").click(timeout = 0)    
+
+        self.dedup_result = self.get_num(self.search_page.locator("font[class='numfmt']").first)
+
+        self.search_url = self.search_page.url
 
     def fetch_diagrams(self):
-        with self.context.expect_page(timeout=0) as new_page_info:
-            self.page.locator("div.show_chart").click(timeout=0)     
-        self.page2 = new_page_info.value
-        self.page2.wait_for_selector("a.chdw", timeout = 0)
-        buttons = self.page2.locator("a.chdw", has_text="資料表下載").all()
+        page = self.open_new_page(self.search_page.locator("div.show_chart"))
 
-        self.page2.locator("select[name='fld4']").select_option("YP_0")
-        self.page2.locator("select[name='limit4']").select_option("4")
-        with self.page2.expect_download() as download_info:
-            buttons[1].click()
-            self.page2.wait_for_load_state()
-        download = download_info.value
-        file_name = f"diagram_{1}.html"
-        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
-        download.save_as(destination_path)
+        self.diagrams_url = page.url
 
-        self.page2.locator("select[name='limit2']").select_option("30")
-        self.page2.locator("select[name='fld2']").select_option("AX")
-        with self.page2.expect_download() as download_info:
-            buttons[2].click()
-        download = download_info.value
-        file_name = f"diagram_{2}.html"
-        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
-        download.save_as(destination_path)
+        page.wait_for_selector("a.chdw", timeout = 0)
+        buttons = page.locator("a.chdw", has_text="資料表下載").all()
 
-        self.page2.locator("select[name='limit2']").select_option("30")
-        self.page2.locator("select[name='fld2']").select_option("AY")
-        with self.page2.expect_download() as download_info:
-            buttons[2].click()
-        download = download_info.value
-        file_name = f"diagram_{3}.html"
-        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
-        download.save_as(destination_path)
+        page.locator("select[name='fld4']").select_option("YP_0")
+        page.locator("select[name='limit4']").select_option("4")
+        self.download_data("diagram_1.html", buttons[1], page)
 
-        self.page2.locator("select[name='limit2']").select_option("30")
-        self.page2.locator("select[name='fld2']").select_option("IP3")
-        with self.page2.expect_download() as download_info:
-            buttons[2].click()
-        download = download_info.value
-        file_name = f"diagram_{4}.html"
-        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
-        download.save_as(destination_path)
+        page.locator("select[name='limit2']").select_option("30")
+        page.locator("select[name='fld2']").select_option("AX")
+        self.download_data("diagram_2.html", buttons[2], page)
 
+        page.locator("select[name='limit2']").select_option("30")
+        page.locator("select[name='fld2']").select_option("AY")
+        self.download_data("diagram_3.html", buttons[2], page)
 
-        self.page2.close()
+        page.locator("select[name='limit2']").select_option("30")
+        page.locator("select[name='fld2']").select_option("IP3")
+        self.download_data("diagram_4.html", buttons[2], page)
+
+        page.close()
 
     def fetch_names_and_contents(self):
-        curr_url = "https://tiponet.tipo.gov.tw" + self.page.locator("a:has-text('標記清單')").get_attribute("href")
-        self.page2 = self.context.new_page()
-        self.page2.goto(curr_url)
-        self.page2.wait_for_load_state()
-        self.page2.locator("input[title='下載全選']").click()
+        self.search_page.locator("input[title='本次全選']").click(timeout = 0)
+        self.search_page.locator("input[title='加入標記清單']").click(timeout = 0)
 
-        self.page2.locator("span[data-target='#outpop']").click()
-        modal = self.page2.locator("div[id='outpop']")
+        self.list_url = "https://tiponet.tipo.gov.tw" + self.search_page.locator("a:has-text('標記清單')").get_attribute("href")
+        page = self.context.new_page()
+        page.goto(self.list_url)
+        page.wait_for_load_state()
+
+        page.locator("input[title='下載全選']").click()
+        page.locator("span[data-target='#outpop']").click()
+        modal = page.locator("div[id='outpop']")
         modal.locator("input[value='全不選']").click()
         modal.locator("input[name='_9_11_S_TI']").click()
         modal.locator("input[name='_9_11_S_AB']").click()
 
-        with self.page2.expect_download(timeout = 0) as download_info:
-            modal.locator("input[title='執行輸出']").click(timeout = 0)
-        download = download_info.value
-        file_name = f"contents.xls"
-        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
-        download.save_as(destination_path)
-        
+        self.download_data("contents.xls", modal.locator("input[title='執行輸出']"), page)
         modal.locator("span[class='modal_close']").click()
 
-        self.page2.close()
-
-    def add_to_matrix(self):
-        button = self.page.locator("input[title='檢索歸類']")
-        button.evaluate("element => element.click()")
-        self.page.wait_for_selector("div[class='msgfmt']", timeout = 0)
-
-    def go_to_matrix(self):
-        with self.context.expect_page() as new_page_info:
-            self.page.locator("div[class='msgfmt'] a[target='_proj']").click()
-        self.page2 = new_page_info.value
-        self.page2.wait_for_load_state()
-        with self.context.expect_page(timeout = 0) as new_page_info:
-            self.page2.locator("span[title='Matrix']").click(timeout = 0)
-        self.page2.close()
-        self.page2 = new_page_info.value
+        page.close()
 
     def fill_matrix_form(self, json_data):
-        """
-        將 JSON 資料填入技術功效矩陣表單
-        :param json_data: 包含 technologies 和 efficacies 的字典
-        """
+        self.search_page.locator("input[title='本次全選']").click(timeout = 0)
+        button = self.search_page.locator("input[title='檢索歸類']")
+        button.evaluate("element => element.click()")
+        self.search_page.wait_for_selector("div[class='msgfmt']", timeout = 0)
+
+        page = self.open_new_page(self.search_page.locator("div[class='msgfmt'] a[target='_proj']"))
+
+        page_temp = self.open_new_page(page.locator("span[title='Matrix']"))
+        page.close()
+        page = page_temp
+
         technologies = json_data.get("technologies", [])
         efficacies = json_data.get("efficacies", [])
+
         for _ in range(len(technologies) - 3):
-            self.page2.locator("span[id='tech_add']").click()
+            page.locator("span[id='tech_add']").click()
         for i in range(len(efficacies) - 3):
-            self.page2.locator("span[id='func_add']").click()
+            page.locator("span[id='func_add']").click()
 
-        # 1. 填寫【技術名稱】與【技術檢索條件】 (橫向 X 軸)
-        # HTML name 格式: mtr/tech/name01, mtr/tech/term01 ... 到 06
+
         for i, tech in enumerate(technologies):
-            # 索引從 0 開始，但 HTML name 是從 01 開始，所以要 i+1
-            index_str = f"{i+1:02d}" # 格式化成 "01", "02"...
+            index_str = f"{i+1:02d}"
             
-            # 填寫技術名稱 (Label)
-            self.page2.locator(f"textarea[name='mtr/tech/name{index_str}']").fill(tech["label"])
-            
-            # 填寫技術檢索條件 (Boolean)
-            self.page2.locator(f"textarea[name='mtr/tech/term{index_str}']").fill(tech["boolean"])
+            page.locator(f"textarea[name='mtr/tech/name{index_str}']").fill(tech["label"])
+            page.locator(f"textarea[name='mtr/tech/term{index_str}']").fill(tech["boolean"])
 
-        # 2. 填寫【功效名稱】與【功效檢索條件】 (縱向 Y 軸)
-        # HTML name 格式: mtr/func/name01, mtr/func/term01 ... 到 06
         for i, eff in enumerate(efficacies):
             index_str = f"{i+1:02d}"
             
-            # 填寫功效名稱 (Label)
-            self.page2.locator(f"textarea[name='mtr/func/name{index_str}']").fill(eff["label"])
-            
-            # 填寫功效檢索條件 (Boolean)
-            self.page2.locator(f"textarea[name='mtr/func/term{index_str}']").fill(eff["boolean"])
+            page.locator(f"textarea[name='mtr/func/name{index_str}']").fill(eff["label"])            
+            page.locator(f"textarea[name='mtr/func/term{index_str}']").fill(eff["boolean"])
 
-        self.page2.locator("body").click()
-        self.page2.locator("input[value='進行分析']").click()
-        self.page2.locator("select[name='exp_format']").select_option("EXCEL")
+        page.locator("body").click()
+        page.locator("input[value='進行分析']").click()
+        page.locator("select[name='exp_format']").select_option("EXCEL")
 
-        with self.page2.expect_download(timeout = 0) as download_info:
-            self.page2.locator("input[title='Export']").click(timeout = 0)
-        download = download_info.value
-        file_name = f"matrix_form.xls"
-        destination_path = os.path.join(os.getcwd() + "/.data", file_name)
-        download.save_as(destination_path)
+        self.download_data("matrix_form.xls", page.locator("input[title='Export']"), page)
+
+        page.close()
+
+    def get_results(self):
+        return [self.search_result, self.dedup_result]
