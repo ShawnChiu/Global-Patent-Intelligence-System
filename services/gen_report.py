@@ -3,6 +3,7 @@ from docx.shared import Pt, Inches, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from io import BytesIO
+import re
 
 class ReportGenrator:
     def __init__(self, theme = "", search_result = [0, 0], query = "", students_data = [], source = ["", ""], matrix_json = []):        
@@ -11,6 +12,7 @@ class ReportGenrator:
         self.theme = theme
         self.search_result = search_result
         self.query = query
+        self.scope = self.extract_ipc_scope(query)
         self.students_data = students_data
         self.source = source
         self.matrix_json = matrix_json
@@ -22,12 +24,31 @@ class ReportGenrator:
             self.search_result = search_result
         if query:
             self.query = query
+            self.scope = self.extract_ipc_scope(query)
         if students_data:
             self.students_data = students_data
         if source:
             self.source = source
         if matrix_json:
             self.matrix_json = matrix_json
+
+    def extract_ipc_scope(query_string):
+        """
+        從檢索字串中擷取 IC (IPC/CPC) 範圍，自動去除括號。
+        """
+        # Regex 解析：
+        # 1. \(?       -> 匹配開頭可選的左括號 '('
+        # 2. (IC=[^)]+) -> 【捕獲群組】抓取 IC= 開頭，且內容不包含 ')' 的所有字元
+        # 3. \)?       -> 匹配結尾可選的右括號 ')'
+        pattern = r"\(?(IC=[^)]+)\)?"
+        
+        # 搜尋所有符合的片段 (通常 IPC 設定會在最後面，我們取最後一個匹配的或是特定的)
+        match = re.search(pattern, query_string)
+        
+        if match:
+            # group(1) 會自動排除掉括號，只回傳中間的內容
+            return match.group(1).strip()
+        return None
 
 
     def gen_report(self):
@@ -48,24 +69,22 @@ class ReportGenrator:
         # --- 2. 成員名單表格 ---
         # 成員表格
         doc.add_heading('成員名單', level=1)
-        table = doc.add_table(rows=4, cols=4)
+        table = doc.add_table(rows=2, cols=2)
         table.style = 'Table Grid'
         
         # 表頭
-        headers = ['姓名', '學號', '姓名', '學號']
-        for i, text in enumerate(headers):
+        headers = ['姓名', '學號']
+        for i in range(2):
+            text = headers[i]
             cell = table.cell(0, i)
             run = cell.paragraphs[0].add_run(text)
             set_chinese_font(run, bold=True)
+
+            text = self.students_data[i]
             cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-        
-        # 填充範例資料 (根據 source: 3 的格式)
-        for i, row_data in enumerate(self.students_data):
-            for j, text in enumerate(row_data):
-                row = i % 3 + 1
-                col = int(int(i / 3) * 2 + j)
-                run = table.cell(row, col).paragraphs[0].add_run(text)
-                set_chinese_font(run)
+            cell = table.cell(1, i)
+            run = cell.paragraphs[0].add_run(text)
+            set_chinese_font(run)
 
         doc.add_page_break()
 
@@ -91,6 +110,14 @@ class ReportGenrator:
         items = []
         items.append("專利資料庫：全球專利檢索系統GPSS。")
         items.append(f"五、主題相關專利：本次專利檢索共獲得 {self.search_result[0]} 筆 專利資料，經過檢索結果去重與專利家族去重處理後，最終共有 {self.search_result[1]} 筆專利資料納入分析。")
+        if self.source[0]:
+            source_text = f"六、IPC或CPC國際分類號採用：參考{self.source[0]}，"
+        else:
+            source_text = ""
+        if self.scope:
+            scope_text = f"將專利檢索式之國際專利分類號設定在{self.scope}"
+        else:
+            scope_text = f"將專利檢索式之國際專利分類號設定在 IPC = IPC"
         if self.source[0]:
             items.append(f"六、IPC或CPC國際分類號採用：參考{self.source[0]}，將專利檢索式之國際專利分類號設定在{{\"\<檢索範圍\>\"}}。")
         else:

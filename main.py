@@ -24,7 +24,7 @@ def main():
     inputs = render_sidebar()
 
     playeright = sync_playwright().start()
-    browser = playeright.chromium.launch(headless=True)
+    browser = playeright.chromium.launch(headless=False)
 
     if inputs["submitted"]:        # 2. 初始化客戶端 (Model)
         gemini_client = GeminiClient(inputs["llm_key"])
@@ -104,7 +104,7 @@ def main():
                     search_result=gpss_client.get_results(), 
                     query=query, 
                     matrix_json=matrix_json, 
-                    students_data=[[inputs["name"], inputs["student_id"]]], 
+                    students_data=[inputs["name"], inputs["student_id"]], 
                     theme=inputs["topic"], 
                     # 注意：確認 inputs 裡面是否有 "source" 這個 key，原本代碼有用到
                     source=[inputs.get("source", ""), inputs["conf_source"]]

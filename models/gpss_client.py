@@ -143,10 +143,10 @@ class GPSSClient:
         self.search_page.wait_for_selector("div[class='msgfmt']", timeout = 0)
 
         page = self.open_new_page(self.search_page.locator("div[class='msgfmt'] a[target='_proj']"))
-
         page_temp = self.open_new_page(page.locator("span[title='Matrix']"))
         page.close()
         page = page_temp
+        page.wait_for_selector("span[id='tech_add']", timeout = 0)
 
         technologies = json_data.get("technologies", [])
         efficacies = json_data.get("efficacies", [])
