@@ -24,7 +24,7 @@ def main():
     inputs = render_sidebar()
 
     playeright = sync_playwright().start()
-    browser = playeright.chromium.launch(headless=False)
+    browser = playeright.chromium.launch(headless=True)
 
     if inputs["submitted"]:        # 2. 初始化客戶端 (Model)
         gemini_client = GeminiClient(inputs["llm_key"])
@@ -98,7 +98,8 @@ def main():
             render_charts_from_files({"ipc": ".data/diagram_4.html", "assignee": ".data/diagram_2.html", 'country': ".data/diagram_3.html", 'trend_range': ".data/diagram_1.html", "matrix": ".data\matrix_form.xls"})
 
 
-        try:
+        with st.spinner("正在生成專利分析報告 ..."):
+            try:
                 regen = ReportGenrator(
                     search_result=gpss_client.get_results(), 
                     query=query, 
@@ -122,9 +123,9 @@ def main():
                     file_name="專利分析報告.docx",
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 )
-                
-        except Exception as e:
-            st.error(f"報告生成失敗: {str(e)}")
+                    
+            except Exception as e:
+                st.error(f"報告生成失敗: {str(e)}")
         
         
 if __name__ == "__main__":
