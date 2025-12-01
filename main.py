@@ -24,7 +24,7 @@ def main():
     inputs = render_sidebar()
 
     playeright = sync_playwright().start()
-    browser = playeright.chromium.launch(headless=False)
+    browser = playeright.chromium.launch(headless=True)
 
     if inputs["submitted"]:        # 2. 初始化客戶端 (Model)
         gemini_client = GeminiClient(inputs["llm_key"])
@@ -38,6 +38,7 @@ def main():
 
         gpss_client = GPSSClient(browser)
         if not gpss_client.login(inputs["user"], inputs["password"]):
+            st.error("登入失敗：請確認帳號密碼是否正確或是再試一次")
             return
 
         with st.spinner("正在進行 ETL (Extract-Transform-Load) ..."):
