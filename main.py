@@ -96,8 +96,35 @@ def main():
         with st.spinner("正在讀取並渲染圖表 ..."):
             # 4. 讀取並渲染圖表 (View)
             render_charts_from_files({"ipc": ".data/diagram_4.html", "assignee": ".data/diagram_2.html", 'country': ".data/diagram_3.html", 'trend_range': ".data/diagram_1.html", "matrix": ".data\matrix_form.xls"})
-        regen = ReportGenrator(search_result=gpss_client.get_results(), query=query, matrix_json=matrix_json, students_data=[[inputs["name"], inputs["student_id"]]], theme=inputs["topic"], source=[inputs["source"], inputs["conf_source"]])
-        regen.gen_report()
+
+
+        try:
+                regen = ReportGenrator(
+                    search_result=gpss_client.get_results(), 
+                    query=query, 
+                    matrix_json=matrix_json, 
+                    students_data=[[inputs["name"], inputs["student_id"]]], 
+                    theme=inputs["topic"], 
+                    # 注意：確認 inputs 裡面是否有 "source" 這個 key，原本代碼有用到
+                    source=[inputs.get("source", ""), inputs["conf_source"]]
+                )
+                
+                # 【關鍵修改】改為回傳 BytesIO 物件，不存硬碟
+                # 請確認 services/gen_report.py 已經改成回傳 buffer
+                report_buffer = regen.gen_report() 
+                
+                st.success("分析完成！")
+                
+                # 顯示下載按鈕
+                st.download_button(
+                    label="📥 下載專利分析期末報告 (.docx)",
+                    data=report_buffer,
+                    file_name="專利分析報告.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
+                
+        except Exception as e:
+            st.error(f"報告生成失敗: {str(e)}")
         
         
 if __name__ == "__main__":

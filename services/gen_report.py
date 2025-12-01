@@ -1,7 +1,8 @@
 from docx import Document
-from docx.shared import Pt, Inches, RGBColor
+from docx.shared import Pt, Inches, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
+from io import BytesIO
 
 class ReportGenrator:
     def __init__(self, theme = "", search_result = [0, 0], query = "", students_data = [], source = ["", ""], matrix_json = []):        
@@ -75,27 +76,26 @@ class ReportGenrator:
 
         # 選定主題
         p = doc.add_paragraph()
-        set_chinese_font(p.add_run('選定主題：'), bold=True)
+        set_chinese_font(p.add_run('一、選定主題：'), bold=True)
         set_chinese_font(p.add_run(f"本研究針對{self.theme}專利分析與布局進行專利檢索分析。"))
 
+        p = doc.add_paragraph()
+        set_chinese_font(p.add_run('二、專家建議、網路資源、相關報導、領導廠商（或有利人士）'))
         # 檢索條件
         p = doc.add_paragraph()
-        set_chinese_font(p.add_run('訂出主題關鍵字：'), bold=True)
-        if self.source:
-            set_chinese_font(p.add_run(f"參考{self.source[0]}，設定以下檢索條件。"))
-        else:
-            set_chinese_font(p.add_run("設定以下檢索條件。"))
-        
+        set_chinese_font(p.add_run('三、訂出主題關鍵字：設定以下檢索條件。'), bold=True)
         query_para = doc.add_paragraph(self.query)
         query_para.runs[0].font.size = Pt(9)
         query_para.runs[0].font.color.rgb = RGBColor(50, 50, 150)
 
-        items = [
-            "專利資料庫：全球專利檢索系統GPSS。", 
-            f"五、主題相關專利：本次專利檢索共獲得 {self.search_result[0]} 筆 專利資料，經過檢索結果去重與專利家族去重處理後，最終共有 {self.search_result[1]} 筆專利資料納入分析。", 
-            f"六、IPC或CPC國際分類號採用：參考{self.source[0]}，將專利檢索式之國際專利分類號設定在{{\"\<檢索範圍\>\"}}。",
-            "七、抽樣檢索：除了關鍵詞與國際分類號，檢索條件仍採取and or not等控制條件。"
-        ]
+        items = []
+        items.append("專利資料庫：全球專利檢索系統GPSS。")
+        items.append(f"五、主題相關專利：本次專利檢索共獲得 {self.search_result[0]} 筆 專利資料，經過檢索結果去重與專利家族去重處理後，最終共有 {self.search_result[1]} 筆專利資料納入分析。")
+        if self.source[0]:
+            items.append(f"六、IPC或CPC國際分類號採用：參考{self.source[0]}，將專利檢索式之國際專利分類號設定在{{\"\<檢索範圍\>\"}}。")
+        else:
+            items.append(f"六、將專利檢索式之國際專利分類號設定在{{\"\<檢索範圍\>\"}}。")
+        items.append("七、抽樣檢索：除了關鍵詞與國際分類號，檢索條件仍採取and or not等控制條件。")
         for item in items:
             p = doc.add_paragraph()
             set_chinese_font(p.add_run(item))
@@ -107,9 +107,10 @@ class ReportGenrator:
             ("專利申請趨勢", "專利申請趨勢（業界用語）")
         ]
         
-        for title_text, desc in charts:
+        for i, [title_text, desc] in enumerate(charts):
             doc.add_heading(title_text, level=2)
-            doc.add_paragraph(f"[{desc} - 請在此處插入圖片]")
+            doc.add_paragraph(desc)
+            doc.add_picture(f".data/chart{i + 1}.png", width=Inches(6))
             # 如果您有圖片檔案，可以使用: doc.add_picture('path_to_image.png', width=Inches(6))
 
         doc.add_page_break()
@@ -164,7 +165,10 @@ class ReportGenrator:
         doc.add_paragraph("[請在此處插入技術功效矩陣氣泡圖]")
         
         # 儲存
-        doc.save('.data/期末報告.docx')
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        return buffer
 
 
 '''
