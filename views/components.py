@@ -22,6 +22,14 @@ FIELD_OPTS = {
 
 def render_sidebar():
     with st.sidebar:
+        st.header("🍬 專利主題")
+        topic = st.text_input("輸入技術主題", value="", type="default", placeholder="輸入你的專利技術主題")
+
+        st.header("🎓 學生資料")
+        name = st.text_input("姓名", value="", type="default", placeholder="輸入你的姓名")
+        student_id = st.text_input("學號", value="", type="default", placeholder="輸入你的學號")
+        
+
         st.header("🌸 GPSS 帳號密碼")
 
         user = st.text_input("GPSS 使用者代碼", value="", type="default", placeholder="輸入你的 GPSS 使用者代碼")
@@ -55,11 +63,13 @@ def render_sidebar():
         tech_conf = ""
         effect_conf = ""
         llm_key = ""
+        conf_source = ""
 
         if matrix_mode == "關鍵字規則 (Rule-based)":
             with st.expander("定義關鍵字規則", expanded=True):
                 tech_conf = st.text_area("技術手段 (X軸)", value=DEFAULT_TECH_CONFIG, height=150)
                 effect_conf = st.text_area("達成功效 (Y軸)", value=DEFAULT_EFFECT_CONFIG, height=150)
+            conf_source = st.text_input("關鍵字來源說明 (選填)", value="", type="default", placeholder="輸入關鍵字來源")
                 
         else: # AI Mode
             st.markdown("""
@@ -76,6 +86,8 @@ def render_sidebar():
         submitted = st.button("🚀 開始分析", type="primary")
         
     return {
+        "name": name,
+        "student_id": student_id,
         "user": user,
         "password": password,
         "query": query, 
@@ -84,7 +96,9 @@ def render_sidebar():
         "matrix_mode": matrix_mode, 
         "search_mode": search_mode,
         "llm_key": llm_key,
-        "submitted": submitted
+        "submitted": submitted,
+        "conf_source": conf_source,
+        "topic": topic
     }
 
 # 請將此函式覆蓋 views/components.py 中的 render_charts_from_files

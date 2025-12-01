@@ -47,53 +47,54 @@ def main():
                 st.error(f"系統發生錯誤: {str(e)}")
 
         matrix_json = []
-        if inputs["matrix_mode"] == "AI 語意推論 (Gemini LLM)":
-            with st.spinner("正在進行矩陣維度分析 ..."):
-                try:
-                    matrix_json, state = gemini_client.generate_gpss_strategy(".data\contents.xls");    
-                    if state != "Success":
-                        st.error(state)
-                        return
-                    gpss_client.fill_matrix_form(matrix_json)
-                except Exception as e:
+        with st.spinner("正在進行矩陣分析 ..."):
+            try:
+                if inputs["matrix_mode"] == "AI 語意推論 (Gemini LLM)":
+                        matrix_json, state = gemini_client.generate_gpss_strategy(".data\contents.xls");    
+                        if state != "Success":
+                            st.error(state)
+                            return
+                        gpss_client.fill_matrix_form(matrix_json)
+                    
+                else:
+                    def parse_manual_input(text_block):
+                        """
+                        將 "Label: (Query)" 格式的多行字串轉換為 list of dicts
+                        """
+                        items = []
+                        if not text_block: 
+                            return items
+                            
+                        # 逐行處理
+                        for line in text_block.strip().split('\n'):
+                            line = line.strip()
+                            if not line: continue  # 跳過空行
+                            
+                            # 尋找第一個冒號 (:) 來切割 Label 與 Boolean String
+                            if ':' in line:
+                                parts = line.split(':', 1) # 只切第一刀
+                                label = parts[0].strip()
+                                query = parts[1].strip()
+                                
+                                items.append({
+                                    "label": label,
+                                    "boolean": query
+                                })
+                                
+                        return items
+                    matrix_json = {
+                        "domain_detected": "Manual Input (手動定義)",
+                        "technologies": parse_manual_input(inputs["tech_conf"]),
+                        "efficacies": parse_manual_input(inputs["effect_conf"])
+                    }
+                gpss_client.fill_matrix_form(matrix_json)
+            except Exception as e:
                     st.error(f"系統發生錯誤: {str(e)}")
-        else:
-            def parse_manual_input(text_block):
-                """
-                將 "Label: (Query)" 格式的多行字串轉換為 list of dicts
-                """
-                items = []
-                if not text_block: 
-                    return items
-                    
-                # 逐行處理
-                for line in text_block.strip().split('\n'):
-                    line = line.strip()
-                    if not line: continue  # 跳過空行
-                    
-                    # 尋找第一個冒號 (:) 來切割 Label 與 Boolean String
-                    if ':' in line:
-                        parts = line.split(':', 1) # 只切第一刀
-                        label = parts[0].strip()
-                        query = parts[1].strip()
-                        
-                        items.append({
-                            "label": label,
-                            "boolean": query
-                        })
-                        
-                return items
-            matrix_json = {
-                "domain_detected": "Manual Input (手動定義)",
-                "technologies": parse_manual_input(inputs["tech_conf"]),
-                "efficacies": parse_manual_input(inputs["effect_conf"])
-            }
-            gpss_client.fill_matrix_form(matrix_json)
 
         with st.spinner("正在讀取並渲染圖表 ..."):
             # 4. 讀取並渲染圖表 (View)
             render_charts_from_files({"ipc": ".data/diagram_4.html", "assignee": ".data/diagram_2.html", 'country': ".data/diagram_3.html", 'trend_range': ".data/diagram_1.html", "matrix": ".data\matrix_form.xls"})
-        regen = ReportGenrator(search_result=gpss_client.get_results(), query=query, matrix_json=matrix_json)
+        regen = ReportGenrator(search_result=gpss_client.get_results(), query=query, matrix_json=matrix_json, students_data=[inputs["name"], inputs["student_id"]], theme=inputs["topic"], source=[inputs["conf_source"]])
         regen.gen_report()
         
         
