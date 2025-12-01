@@ -32,7 +32,7 @@ class ReportGenrator:
         if matrix_json:
             self.matrix_json = matrix_json
 
-    def extract_ipc_scope(query_string):
+    def extract_ipc_scope(self, query):
         """
         從檢索字串中擷取 IC (IPC/CPC) 範圍，自動去除括號。
         """
@@ -43,7 +43,7 @@ class ReportGenrator:
         pattern = r"\(?(IC=[^)]+)\)?"
         
         # 搜尋所有符合的片段 (通常 IPC 設定會在最後面，我們取最後一個匹配的或是特定的)
-        match = re.search(pattern, query_string)
+        match = re.search(pattern, query)
         
         if match:
             # group(1) 會自動排除掉括號，只回傳中間的內容
@@ -121,7 +121,7 @@ class ReportGenrator:
         if self.source[0]:
             items.append(f"六、IPC或CPC國際分類號採用：參考{self.source[0]}，將專利檢索式之國際專利分類號設定在{{\"\<檢索範圍\>\"}}。")
         else:
-            items.append(f"六、將專利檢索式之國際專利分類號設定在{{\"\<檢索範圍\>\"}}。")
+            items.append(f"六、將專利檢索式之國際專利分類號設定在{{\"\<檢索範圍\>\"}}。")   
         items.append("七、抽樣檢索：除了關鍵詞與國際分類號，檢索條件仍採取and or not等控制條件。")
         for item in items:
             p = doc.add_paragraph()

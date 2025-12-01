@@ -142,10 +142,9 @@ class GPSSClient:
         button.evaluate("element => element.click()")
         self.search_page.wait_for_selector("div[class='msgfmt']", timeout = 0)
 
-        page = self.open_new_page(self.search_page.locator("div[class='msgfmt'] a[target='_proj']"))
-        page_temp = self.open_new_page(page.locator("span[title='Matrix']"))
-        page.close()
-        page = page_temp
+        page_temp = self.open_new_page(self.search_page.locator("div[class='msgfmt'] a[target='_proj']"))
+        page = self.open_new_page(page_temp.locator("span[title='Matrix']"))
+        page_temp.close()
         page.wait_for_selector("span[id='tech_add']", timeout = 0)
 
         technologies = json_data.get("technologies", [])
