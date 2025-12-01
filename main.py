@@ -30,7 +30,7 @@ def main():
         gemini_client = GeminiClient(inputs["llm_key"])
         if inputs["search_mode"] != "搜尋布林檢索式":
             with st.spinner("正在生成布林檢索式，請稍候..."):
-                query = gemini_client.convert_topic_to_query(inputs["query"])
+                query = gemini_client.convert_topic_to_query(inputs["topic"])
                 with st.expander("查看布林檢索式", expanded=False):
                     st.text(query)
         else:
@@ -96,7 +96,7 @@ def main():
         with st.spinner("正在讀取並渲染圖表 ..."):
             # 4. 讀取並渲染圖表 (View)
             render_charts_from_files({"ipc": ".data/diagram_4.html", "assignee": ".data/diagram_2.html", 'country': ".data/diagram_3.html", 'trend_range': ".data/diagram_1.html", "matrix": ".data\matrix_form.xls"})
-        regen = ReportGenrator(search_result=gpss_client.get_results(), query=query, matrix_json=matrix_json, students_data=[inputs["name"], inputs["student_id"]], theme=inputs["topic"], source=[inputs["conf_source"]])
+        regen = ReportGenrator(search_result=gpss_client.get_results(), query=query, matrix_json=matrix_json, students_data=[inputs["name"], inputs["student_id"]], theme=inputs["topic"], source=[inputs["source"], inputs["conf_source"]])
         regen.gen_report()
         
         

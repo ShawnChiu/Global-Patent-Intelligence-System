@@ -4,14 +4,7 @@ import plotly.express as px
 import re
 import pandas as pd
 
-# 嘗試匯入設定，若失敗則使用預設值
-try:
-    from config import DEFAULT_USER_CODE, DEFAULT_TECH_CONFIG, DEFAULT_EFFECT_CONFIG, DEFAULT_GEMINI_API
-except ImportError:
-    DEFAULT_USER_CODE = ""
-    DEFAULT_TECH_CONFIG = "PGU: projector\nCombiner: waveguide"
-    DEFAULT_EFFECT_CONFIG = "FOV: fov\nVID: vid"
-    DEFAULT_GEMINI_API = ""
+import config
 
 FIELD_OPTS = {
     "TI/AB/CL": "標題/摘要/範圍 (複合)",
@@ -32,8 +25,8 @@ def render_sidebar():
 
         st.header("🌸 GPSS 帳號密碼")
 
-        user = st.text_input("GPSS 使用者代碼", value="", type="default", placeholder="輸入你的 GPSS 使用者代碼")
-        password = st.text_input("GPSS 密碼", value="", type="password", placeholder="輸入你的 GPSS 密碼")
+        user = st.text_input("GPSS 使用者代碼", value=config.DEFAULT_USER_ID, type="default", placeholder="輸入你的 GPSS 使用者代碼")
+        password = st.text_input("GPSS 密碼", value=config.DEFAULT_USER_PW, type="password", placeholder="輸入你的 GPSS 密碼")
 
         st.header("🔍 搜尋條件")
 
@@ -42,14 +35,16 @@ def render_sidebar():
             ["搜尋布林檢索式", "AI 檢索式推論 (Gemini LLM)"],
         )
         query = ""
+        source = ""
         if search_mode == "搜尋布林檢索式":
             query = st.text_input("輸入布林檢索式", value="(IGS OR \"International Games System\" OR 鈊象 OR \"インターナショナル ゲーム システム\" OR \"인터내셔널 게임 시스템\")@TI,AB,CL,DE AND ID=:20241231 AND (IC=A63F* OR IC=G07F* OR IC=G06F*)"
             "", type="default")
+            source = st.text_input("來源說明 (選填)", value="", type="default", placeholder="輸入來源")
+
         else:
             st.markdown("""
             **🧠 AI 自動生成布林檢索式** 系統將根據主題自動生成複雜的布林檢索式
             """)
-            query = st.text_input("輸入技術主題", value="鈊象", type="default")
 
         st.divider()
         st.header("🤖 分析設定")
@@ -67,8 +62,8 @@ def render_sidebar():
 
         if matrix_mode == "關鍵字規則 (Rule-based)":
             with st.expander("定義關鍵字規則", expanded=True):
-                tech_conf = st.text_area("技術手段 (X軸)", value=DEFAULT_TECH_CONFIG, height=150)
-                effect_conf = st.text_area("達成功效 (Y軸)", value=DEFAULT_EFFECT_CONFIG, height=150)
+                tech_conf = st.text_area("技術手段 (X軸)", value=config.DEFAULT_TECH_CONFIG, height=150)
+                effect_conf = st.text_area("達成功效 (Y軸)", value=config.DEFAULT_EFFECT_CONFIG, height=150)
             conf_source = st.text_input("關鍵字來源說明 (選填)", value="", type="default", placeholder="輸入關鍵字來源")
                 
         else: # AI Mode
@@ -81,7 +76,7 @@ def render_sidebar():
         st.divider()
         st.header("🔑 API 設定")
 
-        llm_key = st.text_input("Google Gemini API Key", value=DEFAULT_GEMINI_API, type="password", placeholder="貼上你的 AI Studio Key")
+        llm_key = st.text_input("Google Gemini API Key", value=config.DEFAULT_GEMINI_API, type="password", placeholder="貼上你的 AI Studio Key")
             
         submitted = st.button("🚀 開始分析", type="primary")
         
@@ -90,8 +85,9 @@ def render_sidebar():
         "student_id": student_id,
         "user": user,
         "password": password,
+        "source": source,
         "query": query, 
-        "tech_conf": tech_conf, 
+        "tech_conf": tech_conf,
         "effect_conf": effect_conf,
         "matrix_mode": matrix_mode, 
         "search_mode": search_mode,
@@ -100,8 +96,6 @@ def render_sidebar():
         "conf_source": conf_source,
         "topic": topic
     }
-
-# 請將此函式覆蓋 views/components.py 中的 render_charts_from_files
 
 def render_charts_from_files(files_dict):
     """
