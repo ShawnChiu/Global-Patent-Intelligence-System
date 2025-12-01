@@ -8,7 +8,7 @@ import re
 
 class GPSSClient:
     
-    def __init__(self, browser, account, password):
+    def __init__(self, browser):
         self.context = browser.new_context()
         self.search_page = self.context.new_page()
 
@@ -17,9 +17,6 @@ class GPSSClient:
         self.search_url = "https://tiponet.tipo.gov.tw/gpss2/gpsskmc/gpssbkm"
         self.list_url = "https://tiponet.tipo.gov.tw/gpss2/gpsskmc/gpssbkm"
         self.diagrams_url = "https://tiponet.tipo.gov.tw/gpss2/gpsskmc/gpssbkm"
-
-        self.account = account
-        self.password = password
 
         self.search_result = None
         self.dedup_result = None
@@ -41,34 +38,36 @@ class GPSSClient:
         text = re.sub(r'[^\d.]', '', text)
         return int(float(text))
 
-    def fetch_data(self, query):
-        self.login()
-        self.search(query)
-        self.fetch_diagrams()
-        self.fetch_names_and_contents()
-
-    def login(self):
+    def login(self, account, password):
         page = self.context.new_page()
         page.goto(self.home_url)
         page.wait_for_load_state()
         self.login_url = "https://tiponet.tipo.gov.tw" + page.locator("a:has(span[title='登入'])").get_attribute("href")
         page.goto(self.login_url)
         page.wait_for_load_state()
-        page.locator("input[name='email']").fill(self.account)
-        page.locator("input[type='PASSWORD']").fill(self.password)
+        for _ in range(10):
+            page.locator("input[name='email']").fill(account)
+            page.locator("input[type='PASSWORD']").fill(password)
 
-        auth = ""
-        imgs = page.locator("table[class='rand'] img").all()
-        for img in imgs:
-            img_bytes = img.screenshot()            
-            auth += CaptchaSolver.solve(img_bytes)
+            auth = ""
+            imgs = page.locator("table[class='rand'] img").all()
+            for img in imgs:
+                img_bytes = img.screenshot()            
+                auth += CaptchaSolver.solve(img_bytes)
 
-        page.locator("input[name='sys/00/rand']").fill(auth)
-        page.wait_for_url(lambda url: url != self.login_url, timeout=0)
-        page.wait_for_load_state()
-        self.home_url = "https://tiponet.tipo.gov.tw" + page.locator(".navbar-header > a").get_attribute("href")
-        
+            page.locator("input[name='sys/00/rand']").fill(auth)
+            page.locator("input[value='登入/Login']").click()
+            page.wait_for_load_state("networkidle")
+            if page.get_by_text("登出", exact=True).is_visible():
+                self.home_url = "https://tiponet.tipo.gov.tw" + page.locator(".navbar-header > a").get_attribute("href")
+                break
         page.close()
+        return page.url != self.login_url
+
+    def fetch_data(self, query):
+        self.search(query)
+        self.fetch_diagrams()
+        self.fetch_names_and_contents()
     
     def search(self, query):
         self.search_page.goto(self.home_url)

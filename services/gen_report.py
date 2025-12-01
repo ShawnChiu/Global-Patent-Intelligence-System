@@ -91,7 +91,7 @@ class ReportGenrator:
         items = [
             "專利資料庫：全球專利檢索系統GPSS。", 
             f"五、主題相關專利：本次專利檢索共獲得 {self.search_result[0]} 筆 專利資料，經過檢索結果去重與專利家族去重處理後，最終共有 {self.search_result[1]} 筆專利資料納入分析。", 
-            f"六、IPC或CPC國際分類號採用：參考{self.source[1]}，將專利檢索式之國際專利分類號設定在{{\"\<檢索範圍\>\"}}。",
+            f"六、IPC或CPC國際分類號採用：參考{self.source[0]}，將專利檢索式之國際專利分類號設定在{{\"\<檢索範圍\>\"}}。",
             "七、抽樣檢索：除了關鍵詞與國際分類號，檢索條件仍採取and or not等控制條件。"
         ]
         for item in items:
