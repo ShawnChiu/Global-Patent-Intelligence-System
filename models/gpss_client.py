@@ -60,9 +60,10 @@ class GPSSClient:
             page.wait_for_load_state("networkidle")
             if page.get_by_text("登出", exact=True).is_visible():
                 self.home_url = "https://tiponet.tipo.gov.tw" + page.locator(".navbar-header > a").get_attribute("href")
-                break
+                page.close()
+                return True
         page.close()
-        return page.url != self.login_url
+        return False
 
     def fetch_data(self, query):
         self.search(query)
