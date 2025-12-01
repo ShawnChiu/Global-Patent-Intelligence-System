@@ -61,7 +61,9 @@ class ReportGenrator:
         # 填充範例資料 (根據 source: 3 的格式)
         for i, row_data in enumerate(self.students_data):
             for j, text in enumerate(row_data):
-                run = table.cell(i+1, j).paragraphs[0].add_run(text)
+                row = i % 3 + 1
+                col = int(int(i / 3) * 2 + j)
+                run = table.cell(row, col).paragraphs[0].add_run(text)
                 set_chinese_font(run)
 
         doc.add_page_break()
