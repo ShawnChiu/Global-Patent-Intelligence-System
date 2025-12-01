@@ -220,6 +220,8 @@ def render_charts_from_files(files_dict):
                 
                 # with st.expander("查看原始數據"):
                 #     st.dataframe(df_ipc)
+
+                fig.write_image(".data\/chart1.png", format="png", width=1200, height=800, scale=2)
             else:
                 st.error("表格讀取失敗或欄位不足")
         else:
@@ -267,6 +269,8 @@ def render_charts_from_files(files_dict):
                     )
                     # fig.update_layout(plot_bgcolor="white")
                     st.plotly_chart(fig, theme="streamlit", width="stretch")
+
+                    fig.write_image(".data\/chart2.png", format="png", width=1200, height=800, scale=2)
             else:
                 st.error("表格欄位不足 (需要至少兩欄)")
         else:
@@ -288,8 +292,10 @@ def render_charts_from_files(files_dict):
                 )
                 
                 fig = px.pie(df_plot.head(10), values='Count', names='Country', 
-                             title="全球專利佈局佔比", hole=0.4)
+                             title="全球專利佈局佔比", hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
                 st.plotly_chart(fig, theme="streamlit", width="stretch")
+
+                fig.write_image(".data\/chart3.png", format="png", width=1200, height=800, scale=2)
         else:
             st.info("請上傳 國別 統計表")
 
@@ -305,13 +311,15 @@ def render_charts_from_files(files_dict):
                 # 清洗數據
                 df_plot['Count'] = pd.to_numeric(
                     df_plot['Count'].astype(str).str.replace(',', ''), 
-                    errors='coerce'
+                    errors='coerce',
                 )
                 
                 fig = px.line(df_plot, x='Year', y='Count', markers=True, 
-                              title="申請趨勢")
+                              title="申請趨勢", color_discrete_sequence=px.colors.qualitative.Pastel)
                 fig.update_traces(textposition="bottom right")
                 st.plotly_chart(fig, theme="streamlit", width="stretch")
+
+                fig.write_image(".data\/chart4.png", format="png", width=1200, height=800, scale=2)
         else:
             st.info("請上傳 趨勢 統計表")
 
@@ -391,6 +399,7 @@ def render_charts_from_files(files_dict):
                         hover_name='Count',
                         title=f"技術功效矩陣 ({n_x}x{n_y})",
                         size_max=dynamic_size_max, # 應用動態大小
+                        color_discrete_sequence=px.colors.qualitative.Bold, # 使用鮮豔配色
                         text='Count'
                     )
 
@@ -436,8 +445,14 @@ def render_charts_from_files(files_dict):
                     
                     with st.expander("查看原始數據矩陣"):
                         st.dataframe(df_matrix)
+                    
+                    fig.write_image(".data\/chart5.png", format="png", width=1200, height=800, scale=2)
+                    
+
                 else:
                     st.warning("⚠️ 矩陣數據為空 (所有數值皆為 0)")
+
+                
                     
             except Exception as e:
                 st.error(f"矩陣解析錯誤: {str(e)}")
