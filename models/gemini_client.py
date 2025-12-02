@@ -21,7 +21,7 @@ class GeminiClient:
         Task: Convert the user's "Patent Analysis Topic" into a syntactically perfect, MAXIMIZED Boolean Search Query.
 
         [CRITICAL GOAL: MAXIMIZE RICHNESS WITHIN LIMIT]
-        The system allows up to **1900 bytes**. Your goal is to produce a query **between 1500 and 1850 bytes**.
+        The system allows up to **1600 bytes**. Your goal is to produce a query **between 1400 and 1600 bytes**.
         To achieve this:
         1. **Aggressive Expansion**: Do NOT limit yourself to 2-3 synonyms. List **as many relevant synonyms as possible** (5-10+ per language) for the core concepts.
         2. **Technical Granularity**: Include specific technical terms, acronyms, chemical formulas, component names, and spelling variations.
