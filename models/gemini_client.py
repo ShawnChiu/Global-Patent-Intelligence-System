@@ -22,9 +22,8 @@ class GeminiClient:
 
         [CRITICAL CONSTRAINT: LENGTH LIMIT]
         The system has a strict limit of 1900 bytes. Since CJK (Chinese/Japanese/Korean) characters take up 3 bytes each:
-        1. **Prioritize Precision**: Select ONLY the top 2-3 most critical synonyms per language. Do not list every possible variation.
-        2. **Language Priority**: English > Traditional Chinese > Simplified Chinese > Japanese > Korean.
-        3. **Drop Low-Value Terms**: If a term is very generic (e.g., "System", "Method"), do not expand it into all languages.
+        1. **Language Priority**: English > Traditional Chinese > Simplified Chinese > Japanese > Korean.
+        2. **Drop Low-Value Terms**: If a term is very generic (e.g., "System", "Method"), do not expand it into all languages.
 
         [CRITICAL RULE: SYNTAX INTEGRITY]
         1. **Balanced Parentheses**: Ensure every opening `(` has a matching closing `)`.
@@ -256,4 +255,4 @@ class GeminiClient:
             )
             return json.loads(response.text), "Success"
         except Exception as e:
-            return None, f"AI Error: {str(e)}"
+            return self.generate_gpss_strategy(input_data)

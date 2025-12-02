@@ -24,7 +24,7 @@ def main():
     inputs = render_sidebar()
 
     playeright = sync_playwright().start()
-    browser = playeright.chromium.launch(headless=False)
+    browser = playeright.chromium.launch(headless=True)
 
     if inputs["submitted"]:        # 2. 初始化客戶端 (Model)
         gemini_client = GeminiClient(inputs["llm_key"])
@@ -36,30 +36,37 @@ def main():
         else:
             query = inputs["query"]
 
-        gpss_client = GPSSClient(browser)
-        if not gpss_client.login(inputs["user"], inputs["password"]):
-            st.error("登入失敗：請確認帳號密碼是否正確或是再試一次")
-            return
+        with st.spinner("正在登入GPSS ..."):
+            gpss_client = GPSSClient(browser)
+            if not gpss_client.login(inputs["user"], inputs["password"]):
+                st.error("登入失敗：請確認帳號密碼是否正確或是再試一次")
+                return
+            st.success("登入成功！")
 
-        with st.spinner("正在進行 ETL (Extract-Transform-Load) ..."):
+        with st.spinner("正在搜索專利 ..."):
             try:
-                # 3. 獲取數據 (Model)
-                gpss_client.fetch_data(query)
-                
+                gpss_client.search(query)
+                st.success("搜索到： " + str(gpss_client.get_num()) + "筆資料")
+            except Exception as e:
+                st.error(f"系統發生錯誤: {str(e)}")
+
+        with st.spinner("正在獲取圖表資料 ..."):
+            try:
+                gpss_client.fetch_diagrams()
+                st.success("獲取圖表成功！")
             except Exception as e:
                 st.error(f"系統發生錯誤: {str(e)}")
 
         matrix_json = []
         if gpss_client.dedup_result != 0:
-            with st.spinner("正在進行矩陣分析 ..."):
+            with st.spinner("正在進行矩陣維度分析 ..."):
                 try:
                     if inputs["matrix_mode"] == "AI 語意推論 (Gemini LLM)":
-                            matrix_json, state = gemini_client.generate_gpss_strategy(".data\contents.xls");    
-                            if state != "Success":
-                                st.error(state)
-                                return
-                            gpss_client.fill_matrix_form(matrix_json)
-                        
+                        gpss_client.fetch_names_and_contents();
+                        matrix_json, state = gemini_client.generate_gpss_strategy(".data\contents.xls");    
+                        if state != "Success":
+                            st.error(state)
+                            return
                     else:
                         def parse_manual_input(text_block):
                             """
@@ -91,18 +98,20 @@ def main():
                             "technologies": parse_manual_input(inputs["tech_conf"]),
                             "efficacies": parse_manual_input(inputs["effect_conf"])
                         }
-                    gpss_client.fill_matrix_form(matrix_json)
+                    st.success("維度分析完成！")
                 except Exception as e:
-                        st.error(f"系統發生錯誤: {str(e)}")
+                    st.error(f"系統發生錯誤: {str(e)}")
         else:
             st.warning("專利筆數超過 30000，跳過矩陣分析步驟。")
 
-        with st.spinner("正在讀取並渲染圖表 ..."):
-            # 4. 讀取並渲染圖表 (View)
+        with st.spinner("正在進行矩陣分析"):
+            gpss_client.fill_matrix_form(matrix_json)
+            st.success("矩陣分析完成！")
+
+
+        with st.spinner("正在讀取並渲染圖表並生成簡報 ..."):
             render_charts_from_files({"ipc": ".data/diagram_4.html", "assignee": ".data/diagram_2.html", 'country': ".data/diagram_3.html", 'trend_range': ".data/diagram_1.html", "matrix": ".data\matrix_form.xls"})
-
-
-        with st.spinner("正在生成專利分析報告 ..."):
+            st.success("渲染圖表完成！")
             try:
                 regen = ReportGenrator(
                     search_result=gpss_client.get_results(), 
@@ -118,7 +127,7 @@ def main():
                 # 請確認 services/gen_report.py 已經改成回傳 buffer
                 report_buffer = regen.gen_report() 
                 
-                st.success("分析完成！")
+                st.success("分析報告完成！")
                 
                 # 顯示下載按鈕
                 st.download_button(
