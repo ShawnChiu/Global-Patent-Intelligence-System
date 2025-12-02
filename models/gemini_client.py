@@ -18,12 +18,19 @@ class GeminiClient:
         final_prompt = f"""
         Role: You are a Senior Patent Attorney and Search Expert specializing in the "Global Patent Search System (GPSS)".
 
-        Task: Convert the user's "Patent Analysis Topic" into a syntactically perfect Boolean Search Query.
+        Task: Convert the user's "Patent Analysis Topic" into a syntactically perfect, MAXIMIZED Boolean Search Query.
 
-        [CRITICAL CONSTRAINT: LENGTH LIMIT]
-        The system has a strict limit of 1900 bytes. Since CJK (Chinese/Japanese/Korean) characters take up 3 bytes each:
-        1. **Language Priority**: English > Traditional Chinese > Simplified Chinese > Japanese > Korean.
-        2. **Drop Low-Value Terms**: If a term is very generic (e.g., "System", "Method"), do not expand it into all languages.
+        [CRITICAL GOAL: MAXIMIZE RICHNESS WITHIN LIMIT]
+        The system allows up to **1900 bytes**. Your goal is to produce a query **between 1500 and 1850 bytes**.
+        To achieve this:
+        1. **Aggressive Expansion**: Do NOT limit yourself to 2-3 synonyms. List **as many relevant synonyms as possible** (5-10+ per language) for the core concepts.
+        2. **Technical Granularity**: Include specific technical terms, acronyms, chemical formulas, component names, and spelling variations.
+        3. **Language Coverage**: You MUST include English, Traditional Chinese, Simplified Chinese, Japanese, and Korean for ALL key concepts.
+        
+        [BYTE CALCULATION RULE]
+        - English/Numbers: 1 Byte per char.
+        - Chinese/Japanese/Korean: **3 Bytes** per char.
+        - *Strategy*: Since CJK is expensive, prioritize a massive amount of English keywords, followed by a rich selection of CJK terms until the limit is approached.
 
         [CRITICAL RULE: SYNTAX INTEGRITY]
         1. **Balanced Parentheses**: Ensure every opening `(` has a matching closing `)`.
@@ -33,30 +40,32 @@ class GeminiClient:
         ( ( <POSITIVE_KEYWORDS> ) ) NOT ( <NEGATIVE_KEYWORDS>@TI ) AND ID=:20241231 AND ( <IPC_CODES> )
 
         [Construction Steps]
-        1. **Positive Keywords**:
-        - Identify core concepts.
-        - Expand into 5 languages (EN, TC, SC, JP, KR).
-        - **LIMIT**: Max 3 synonyms per language to save space.
-        - Example: `( (Car OR 車 OR 自動車)@TI,AB,CL,DE AND (Battery OR 電池)@TI,AB,CL,DE )`
+        1. **Positive Keywords (The Bulk of the Query)**:
+        - Identify core concepts and sub-concepts.
+        - **Expand Aggressively**: Use broader terms AND narrower specific terms (e.g., for "Display", use "Display", "Screen", "Panel", "OLED", "LCD", "Micro-LED"...).
+        - Apply `@TI,AB,CL,DE` to the groups.
+        - Structure: `( (Concept1_EN OR Concept1_TC OR Concept1_SC OR Concept1_JP OR Concept1_KR...)@TI,AB,CL,DE AND (Concept2...)@TI,AB,CL,DE )`
 
         2. **Negative Keywords (Noise Filtering)**:
         - Identify irrelevant keywords.
-        - **Keep it brief**: Use broadly excluding terms.
+        - Keep it moderate.
         - Apply `@TI` ONLY.
 
         3. **IPC Classification**:
-        - Infer relevant IPC codes (e.g., G06F*).
+        - Include a comprehensive list of relevant IPC/CPC codes (e.g., G06F3/01, G06F3/048...).
         - Combine with OR.
 
         [Reference Example]
-        Input Topic: "駛入新視界：智慧座艙AR-HUD專利分析與布局"
-        Target Output: ( ( (HUD OR Head Up Display OR 抬頭顯示器 OR 平視顯示器 OR ヘッドアップディスプレイ)@TI,AB,CL,DE AND (AR OR Augmented Reality OR 擴增實境 OR Waveguide OR 光波導)@TI,AB,CL,DE ) ) NOT ( (Helmet OR Wearable OR Glasses OR VR OR 穿戴式 OR 頭盔 OR 眼鏡)@TI ) AND ID=:20241231 AND (IC=G02B* OR IC=B60K*)
+        Input Topic: "智慧座艙AR-HUD"
+        Target Output (Truncated for brevity, but real output should be longer): 
+        ( ( (HUD OR Head Up Display OR Head-Up-Display OR Heads Up Display OR 抬頭顯示器 OR 平視顯示器 OR 抬頭顯示 OR 平視顯示 OR ヘッドアップディスプレイ OR フロントガラス表示 OR 헤드 업 디스플레이 OR 전방 표시 장치)@TI,AB,CL,DE AND (AR OR Augmented Reality OR Mixed Reality OR Extended Reality OR XR OR MR OR 擴增實境 OR 增強現實 OR 混合實境 OR 光波導 OR Waveguide OR Holographic OR 全息 OR 虛實融合 OR 拡張現実 OR 複合現実 OR 拡張現実感 OR 증강 현실 OR 혼합 현실)@TI,AB,CL,DE ) ) NOT ( (Helmet OR Wearable OR Glasses OR VR OR Game OR Toy OR 穿戴式 OR 頭盔 OR 眼鏡 OR 遊戲 OR 玩具)@TI ) AND ID=:20241231 AND (IC=G02B* OR IC=B60K* OR IC=H04N*)
 
         [New Topic]
         {topic}
 
         [Output]
-        Return ONLY the raw Boolean Query String. Do NOT include markdown blocks.
+        Return ONLY the raw Boolean Query String. Do NOT include markdown blocks. 
+        Ensure the string starts with `(` and checks out for balanced parentheses.
         """
         
         try:
