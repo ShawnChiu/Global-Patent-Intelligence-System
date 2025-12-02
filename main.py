@@ -6,6 +6,8 @@ if sys.platform.startswith("win"):
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 import streamlit as st
+import nest_asyncio
+nest_asyncio.apply()
 from playwright.sync_api import sync_playwright
 from models.gpss_client import GPSSClient
 from services.analyzer import PatentAnalyzer
@@ -23,10 +25,9 @@ def main():
     # 1. 取得使用者輸入 (View)
     inputs = render_sidebar()
 
-    playeright = sync_playwright().start()
-    browser = playeright.chromium.launch(headless=False)
-
     if inputs["submitted"]:        # 2. 初始化客戶端 (Model)
+        p = sync_playwright().start()
+        browser = p.chromium.launch(headless=False)
         with st.spinner("正在登入GPSS ..."):
             gpss_client = GPSSClient(browser)
             if not gpss_client.login(inputs["user"], inputs["password"]):
@@ -67,7 +68,7 @@ def main():
                 try:
                     if inputs["matrix_mode"] == "AI 語意推論 (Gemini LLM)":
                         gpss_client.fetch_names_and_contents()
-                        matrix_json, state = gemini_client.generate_gpss_strategy(".data\contents.xls")  
+                        matrix_json, state = gemini_client.generate_gpss_strategy(gpss_client.diagram_buffers["contents"])  
                         if state != "Success":
                             st.error(state)
                             return
@@ -115,9 +116,11 @@ def main():
             st.success("矩陣分析完成！")
 
 
+        render_success_place = st.empty()
+        report_success_place = st.empty()
         with st.spinner("正在讀取並渲染圖表並生成簡報 ..."):
             chart_buffers = render_charts_from_files(gpss_client.diagram_buffers)
-            st.success("渲染圖表完成！")
+            render_success_place.success("渲染圖表完成！")
             try:
                 regen = ReportGenrator(
                     search_result=[gpss_client.search_result, gpss_client.dedup_result], 
@@ -134,7 +137,7 @@ def main():
                 # 請確認 services/gen_report.py 已經改成回傳 buffer
                 report_buffer = regen.gen_report() 
                 
-                st.success("分析報告完成！")
+                report_success_place.success("分析報告完成！")
                 
                 # 顯示下載按鈕
                 st.download_button(
@@ -147,7 +150,9 @@ def main():
             except Exception as e:
                 st.error(f"報告生成失敗: {str(e)}")
             setmgr.save()
-    browser.close()
+
+        browser.close()
+        p.stop()
         
         
 if __name__ == "__main__":

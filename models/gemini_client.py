@@ -2,6 +2,7 @@ import google.generativeai as genai
 import json
 import pandas as pd
 import io
+import os
 
 class GeminiClient:
 

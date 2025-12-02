@@ -18,6 +18,16 @@ FIELD_OPTS = {
 @st.dialog("如何取得 Google Gemini API Key")
 def show_gemini_tutorial():
     st.markdown("""
+        <style>
+        /* 針對 Dialog (模態視窗) 內的關閉按鈕進行隱藏 */
+        div[role="dialog"] button[aria-label="Close"] {
+            display: none;
+        }
+        </style>
+        """, 
+        unsafe_allow_html=True
+    )
+    st.markdown("""
     ### 步驟教學：
     1. 前往 **[Google AI Studio](https://aistudio.google.com/)**。
     2. 點擊左下角的 **"Get API key"** 按鈕。
@@ -27,7 +37,85 @@ def show_gemini_tutorial():
     
     *(建議：申請後請妥善保存，不要洩漏給他人)*
     """)
+    if st.button("關閉", type="primary", use_container_width=True):
+        st.rerun()
 
+@st.dialog("📝 編輯矩陣分析")
+def show_matrix_editor():
+    st.markdown("""
+        <style>
+        /* 針對 Dialog (模態視窗) 內的關閉按鈕進行隱藏 */
+        div[role="dialog"] button[aria-label="Close"] {
+            display: none;
+        }
+        </style>
+        """, 
+        unsafe_allow_html=True
+    )
+# 設定 width="large" 讓視窗變寬，適合左右並排
+    st.write("請在下方分別定義 X 軸與 Y 軸的關鍵字：")
+    
+    # 建立左右兩欄
+    col1, col2 = st.columns(2, gap="medium")
+    
+    with col1:
+        st.subheader("🛠️ 技術手段 (X軸)")
+        new_tech = st.text_area(
+            "輸入技術關鍵字 (每行一個)",
+            value=st.session_state.get("final_tech", ""),
+            height=300, # 高度拉長
+            label_visibility="collapsed",
+            key="dlg_tech_input"
+        )
+
+    with col2:
+        st.subheader("✨ 達成功效 (Y軸)")
+        new_effect = st.text_area(
+            "輸入功效關鍵字 (每行一個)",
+            value=st.session_state.get("final_eff", ""),
+            height=300, # 高度拉長
+            label_visibility="collapsed",
+            key="dlg_effect_input"
+        )
+
+    new_source = st.text_input("來源說明 (選填)", value="", type="default", placeholder="輸入來源")
+
+    # 儲存按鈕
+    if st.button("💾 儲存並關閉", type="primary", use_container_width=True):
+        st.session_state.final_tech = new_tech
+        st.session_state.final_eff = new_effect
+        st.session_state.final_conf_source = new_source
+        st.rerun()
+
+@st.dialog("📝 編輯布林檢索式")
+def show_query_editor():
+    
+    st.markdown("""
+        <style>
+        /* 針對 Dialog (模態視窗) 內的關閉按鈕進行隱藏 */
+        div[role="dialog"] button[aria-label="Close"] {
+            display: none;
+        }
+        </style>
+        """, 
+        unsafe_allow_html=True
+    )
+    st.write("請在下方編輯您的完整檢索式：")
+    
+    # 使用 text_area 讓輸入框變很大，方便編輯多行
+    new_query = st.text_area(
+        "檢索式內容",
+        value=st.session_state.get("final_query", ""), # 從 session 讀取
+        height=400, # 設定高度為 400px，夠大！
+        label_visibility="collapsed"
+    )
+    
+    new_source = st.text_input("來源說明 (選填)", value="", type="default", placeholder="輸入來源")
+
+    if st.button("💾 儲存並關閉", type="primary", use_container_width=True):
+        st.session_state.final_query = new_query # 更新 Session
+        st.session_state.final_source = new_source
+        st.rerun() # 重新整理頁面以套用
 
 def render_sidebar():
     with st.sidebar:
@@ -50,17 +138,35 @@ def render_sidebar():
             "選擇搜尋模式",
             ["搜尋布林檢索式", "AI 檢索式推論 (Gemini LLM)"],
         )
+                
+        # --- 初始化 Session State (如果還沒有的話) ---
+        if "final_query" not in st.session_state:
+            st.session_state.final_query = setmgr.settings.query
+            st.session_state.final_source = ""
+            st.session_state.final_tech = setmgr.settings.tech_config
+            st.session_state.final_eff = setmgr.settings.effect_config
+            st.session_state.final_conf_source = ""
+
         query = ""
         source = ""
+        
         if search_mode == "搜尋布林檢索式":
-            query = st.text_input("輸入布林檢索式", value="(IGS OR \"International Games System\" OR 鈊象 OR \"インターナショナル ゲーム システム\" OR \"인터내셔널 게임 시스템\")@TI,AB,CL,DE AND ID=:20241231 AND (IC=A63F* OR IC=G07F* OR IC=G06F*)"
-            "", type="default")
-            source = st.text_input("來源說明 (選填)", value="", type="default", placeholder="輸入來源")
+            # --- 修改開始：改用「預覽框 + 放大按鈕」的排版 ---
+                                    
+            if st.button("✏️ 點擊編輯檢索式", help="點擊編輯檢索式", key="btn_edit_query"):
+                show_query_editor()
+            
+            query = st.session_state.final_query
+            
+            # 來源說明
+            source = st.session_state.final_source
 
         else:
             st.markdown("""
             **🧠 AI 自動生成布林檢索式** 系統將根據主題自動生成複雜的布林檢索式
             """)
+            # 如果是 AI 模式，這裡的 query 可能會在 main.py 產生，或是清空
+            # query = "" 
 
         st.divider()
         st.header("🤖 分析設定")
@@ -77,10 +183,11 @@ def render_sidebar():
         conf_source = ""
 
         if matrix_mode == "關鍵字規則 (Rule-based)":
-            with st.expander("定義關鍵字規則", expanded=True):
-                tech_conf = st.text_area("技術手段 (X軸)", value=setmgr.settings.tech_config, height=150)
-                effect_conf = st.text_area("達成功效 (Y軸)", value=setmgr.settings.effect_config, height=150)
-            conf_source = st.text_input("關鍵字來源說明 (選填)", value="", type="default", placeholder="輸入關鍵字來源")
+            if st.button("✏️ 點擊編輯關鍵字", help="點擊編輯關鍵字", key="btn_edit_matrix"):
+                show_matrix_editor()
+            tech_conf = st.session_state.final_tech
+            effect_conf = st.session_state.final_eff
+            conf_source = st.session_state.final_conf_source
                 
         else: # AI Mode
             st.markdown("""
@@ -90,30 +197,19 @@ def render_sidebar():
                 st.warning("請輸入 Key 以啟動 AI 功能")
         
         st.divider()
-        col_header, col_btn = st.columns([1.5, 1])
-        
-        with col_header:
-            # 這裡放原本的標題
-            st.header("🔑 API 設定")
+        st.header("🔑 API 設定")
             
-        with col_btn:
-            # 【視覺微調】
-            # 因為 Header 字很大，按鈕會顯得太上面
-            # 加一行空字串讓按鈕往下推一點點，視覺上會比較對齊
-            st.write("") 
-            
-            # 顯示問號按鈕，點擊後呼叫彈窗
-            if st.button("❓", key="btn_api_help", help="點擊查看教學"):
-                show_gemini_tutorial() # 呼叫定義好的彈窗函數
+        if st.button("❓ 查看教學", key="btn_api_help", help="點擊查看教學"):
+            show_gemini_tutorial()
 
-        # --- 下面放原本的輸入框 (不用再分欄了，因為按鈕已經在標題旁邊) ---
-        
+
+        # --- 下面放輸入框 ---
         llm_key = st.text_input(
-            "Google Gemini API Key", # 這裡的 label 可以留著，或改成 "" 隱藏
+            "Google Gemini API Key", 
             value=setmgr.settings.gemini_api_key, 
             type="password", 
             placeholder="貼上你的 AI Studio Key",
-            label_visibility="collapsed" # 選擇性：如果你覺得上面已經有標題，這裡想隱藏 label
+            label_visibility="collapsed"
         )
 
         submitted = st.button("🚀 開始分析", type="primary")

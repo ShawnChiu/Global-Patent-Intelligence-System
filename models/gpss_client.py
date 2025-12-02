@@ -135,7 +135,7 @@ class GPSSClient:
         modal.locator("input[name='_9_11_S_TI']").click()
         modal.locator("input[name='_9_11_S_AB']").click()
 
-        self.download_data("contents.xls", modal.locator("input[title='執行輸出']"), page)
+        self.download_data("contents", modal.locator("input[title='執行輸出']"), page)
         modal.locator("span[class='modal_close']").click()
 
         page.close()
