@@ -6,7 +6,7 @@ from io import BytesIO
 import re
 
 class ReportGenrator:
-    def __init__(self, theme = "", search_result = [0, 0], query = "", students_data = [], source = ["", ""], matrix_json = []):        
+    def __init__(self, theme = "", search_result = [0, 0], query = "", students_data = [], source = ["", ""], matrix_json = [], chart_buffers = {}):        
         # 初始化所有需要的欄位
         self.report_title = "智慧財產權實戰策略期末報告"
         self.theme = theme
@@ -16,8 +16,9 @@ class ReportGenrator:
         self.students_data = students_data
         self.source = source
         self.matrix_json = matrix_json
+        self.chart_buffers = chart_buffers
 
-    def set(self, theme = None, search_result = None, query = None, students_data = None, source = None, matrix_json = None):
+    def set(self, theme = None, search_result = None, query = None, students_data = None, source = None, matrix_json = None, chart_buffers = None):
         if theme:
             self.theme = theme
         if search_result:
@@ -31,6 +32,8 @@ class ReportGenrator:
             self.source = source
         if matrix_json:
             self.matrix_json = matrix_json
+        if chart_buffers:
+            self.chart_buffers = chart_buffers
 
     def extract_ipc_scope(self, query):
         """
@@ -136,18 +139,40 @@ class ReportGenrator:
         set_chinese_font(p.add_run("七、抽樣檢索："), bold=True)
         set_chinese_font(p.add_run("除了關鍵詞與國際分類號，檢索條件仍採取and or not等控制條件。"))
 
-        charts = [
-            ("技術領域分類分析"),
-            ("領導者分析（誰是這個領域的領導者）"),
-            ("布局戰場分析（那些國家是布局戰場）"),
-            ("專利申請趨勢")
-        ]
-        for i, title_text in enumerate(charts):
-            if i % 2 == 0:
-                doc.add_page_break()
-            doc.add_heading(title_text, level=2)
-            doc.add_picture(f".data/chart{i + 1}.png", width=Inches(5))
-            # 如果您有圖片檔案，可以使用: doc.add_picture('path_to_image.png', width=Inches(6))
+        doc.add_page_break()
+        doc.add_heading("技術領域分類分析", level=2)
+        buffer = self.chart_buffers.get("ipc")
+        if buffer:
+            buffer.seek(0)
+            doc.add_picture(buffer, width=Inches(5))
+        else:
+            doc.add_paragraph("[無 IPC 圖表數據]")
+
+        doc.add_heading("領導者分析（誰是這個領域的領導者）", level=2)
+        buffer = self.chart_buffers.get("assignee")
+        if buffer:
+            buffer.seek(0)
+            doc.add_picture(buffer, width=Inches(5))
+        else:
+            doc.add_paragraph("[無 IPC 圖表數據]")
+
+        doc.add_page_break()
+        doc.add_heading("布局戰場分析（那些國家是布局戰場）", level=2)
+        buffer = self.chart_buffers.get("country")
+        if buffer:
+            buffer.seek(0)
+            doc.add_picture(buffer, width=Inches(5))
+        else:
+            doc.add_paragraph("[無 IPC 圖表數據]")
+
+        doc.add_heading("專利申請趨勢", level=2)
+        buffer = self.chart_buffers.get("ipc")
+        if buffer:
+            buffer.seek(0)
+            doc.add_picture(buffer, width=Inches(5))
+        else:
+            doc.add_paragraph("[無 IPC 圖表數據]")
+
 
         doc.add_page_break()
 
@@ -213,7 +238,12 @@ class ReportGenrator:
         # --- 6. 技術功效矩陣分析 ---
         # 
         doc.add_heading('三、技術功效矩陣分析', level=1)
-        doc.add_picture(f".data/chart5.png", width=Inches(5))
+        buffer = self.chart_buffers.get("matrix")
+        if buffer:
+                buffer.seek(0)
+                doc.add_picture(buffer, width=Inches(5))
+        else:
+            doc.add_paragraph("[無 IPC 圖表數據]")
         
         # 儲存
         buffer = BytesIO()

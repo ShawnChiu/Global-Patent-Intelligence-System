@@ -1,8 +1,10 @@
 # models/gpss_client.py
 from playwright.sync_api import sync_playwright
-import os
 from services.captcha import CaptchaSolver
 import re
+import io
+import pandas as pd
+
 
 class GPSSClient:
     
@@ -18,17 +20,23 @@ class GPSSClient:
 
         self.search_result = None
         self.dedup_result = None
+        self.diagram_buffers = {}
 
-    def download_data(self, filename, trigger, page):
+    def download_data(self, name, trigger, page):
         with page.expect_download(timeout = 0) as download_info:
             trigger.click(timeout = 0)
         download = download_info.value
-        destination_path = os.path.join(os.getcwd() + "/.data", filename)
-        download.save_as(destination_path)
-    
+        path = download.path()
+
+        buffer = io.BytesIO()
+        with open(path, 'rb') as f:
+            buffer.write(f.read())
+        buffer.seek(0)
+        self.diagram_buffers[name] = buffer
+         
     def open_new_page(self, trigger):
         with self.context.expect_page(timeout=0) as new_page_info:
-            trigger.click(timeout=0)
+            trigger.click(timeout=0, force=True)
         return new_page_info.value
 
     def get_num(self, trigger):
@@ -95,19 +103,19 @@ class GPSSClient:
 
         page.locator("select[name='fld4']").select_option("YP_0")
         page.locator("select[name='limit4']").select_option("4")
-        self.download_data("diagram_1.html", buttons[1], page)
+        self.download_data("trend_range", buttons[1], page)
 
         page.locator("select[name='limit2']").select_option("30")
         page.locator("select[name='fld2']").select_option("AX")
-        self.download_data("diagram_2.html", buttons[2], page)
+        self.download_data("assignee", buttons[2], page)
 
         page.locator("select[name='limit2']").select_option("30")
         page.locator("select[name='fld2']").select_option("AY")
-        self.download_data("diagram_3.html", buttons[2], page)
+        self.download_data("country", buttons[2], page)
 
         page.locator("select[name='limit2']").select_option("30")
         page.locator("select[name='fld2']").select_option("IP3")
-        self.download_data("diagram_4.html", buttons[2], page)
+        self.download_data("ipc", buttons[2], page)
 
         page.close()
 
@@ -168,9 +176,6 @@ class GPSSClient:
         page.locator("input[value='進行分析']").click()
         page.locator("select[name='exp_format']").select_option("EXCEL")
 
-        self.download_data("matrix_form.xls", page.locator("input[title='Export']"), page)
+        self.download_data("matrix", page.locator("input[title='Export']"), page)
 
         page.close()
-
-    def get_results(self):
-        return [self.search_result, self.dedup_result]

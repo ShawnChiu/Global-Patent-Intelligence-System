@@ -50,6 +50,7 @@ def main():
             try:
                 gpss_client.search(query)
                 st.success("搜索到： " + str(gpss_client.search_result) + "筆資料")
+                setmgr.settings.query = query
             except Exception as e:
                 st.error(f"系統發生錯誤: {str(e)}")
 
@@ -115,17 +116,18 @@ def main():
 
 
         with st.spinner("正在讀取並渲染圖表並生成簡報 ..."):
-            render_charts_from_files({"ipc": ".data/diagram_4.html", "assignee": ".data/diagram_2.html", 'country': ".data/diagram_3.html", 'trend_range': ".data/diagram_1.html", "matrix": ".data\matrix_form.xls"})
+            chart_buffers = render_charts_from_files(gpss_client.diagram_buffers)
             st.success("渲染圖表完成！")
             try:
                 regen = ReportGenrator(
-                    search_result=gpss_client.get_results(), 
+                    search_result=[gpss_client.search_result, gpss_client.dedup_result], 
                     query=query, 
                     matrix_json=matrix_json, 
                     students_data=[inputs["name"], inputs["student_id"]], 
                     theme=inputs["topic"], 
                     # 注意：確認 inputs 裡面是否有 "source" 這個 key，原本代碼有用到
-                    source=[inputs.get("source", ""), inputs["conf_source"]]
+                    source=[inputs.get("source", ""), inputs["conf_source"]],
+                    chart_buffers=chart_buffers 
                 )
                 
                 # 【關鍵修改】改為回傳 BytesIO 物件，不存硬碟

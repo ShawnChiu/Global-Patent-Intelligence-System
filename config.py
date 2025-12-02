@@ -5,6 +5,8 @@ DEFAULT_GEMINI_API = ""
 DEFAULT_USER_ID = ""
 DEFAULT_USER_PW = ""
 
+DEFAULT_QUERY = "(IGS OR \"International Games System\" OR 鈊象 OR \"インターナショナル ゲーム システム\" OR \"인터내셔널 게임 시스템\")@TI,AB,CL,DE AND ID=:20241231 AND (IC=A63F* OR IC=G07F* OR IC=G06F*)"
+
 # 預設矩陣定義
 DEFAULT_TECH_CONFIG = """PGU: (projector OR pgu OR light engine OR 光機)
 Combiner: (waveguide OR combiner OR holographic OR 光波導)

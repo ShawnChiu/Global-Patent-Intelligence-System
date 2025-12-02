@@ -13,6 +13,7 @@ class UserSettings:
     tech_config: str = config.DEFAULT_TECH_CONFIG
     effect_config: str = config.DEFAULT_EFFECT_CONFIG
     gemini_api_key: str = config.DEFAULT_GEMINI_API
+    query: str = config.DEFAULT_QUERY
 
 class SettingsManager:
     def __init__(self, filepath=SETTINGS_FILE):
