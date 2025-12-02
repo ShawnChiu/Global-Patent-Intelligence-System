@@ -15,6 +15,20 @@ FIELD_OPTS = {
     "PA": "申請人", "IN": "發明人"
 }
 
+@st.dialog("如何取得 Google Gemini API Key")
+def show_gemini_tutorial():
+    st.markdown("""
+    ### 步驟教學：
+    1. 前往 **[Google AI Studio](https://aistudio.google.com/)**。
+    2. 點擊左下角的 **"Get API key"** 按鈕。
+    3. 點擊 **"Create API key"**。
+    4. 名字隨意，專案選擇 **"Gemini API"**後點選 Create。
+    6. 複製生成的 Key 並貼回本系統。
+    
+    *(建議：申請後請妥善保存，不要洩漏給他人)*
+    """)
+
+
 def render_sidebar():
     with st.sidebar:
         st.header("🍬 專利主題")
@@ -76,10 +90,32 @@ def render_sidebar():
                 st.warning("請輸入 Key 以啟動 AI 功能")
         
         st.divider()
-        st.header("🔑 API 設定")
-
-        llm_key = st.text_input("Google Gemini API Key", value=setmgr.settings.gemini_api_key, type="password", placeholder="貼上你的 AI Studio Key")
+        col_header, col_btn = st.columns([1.5, 1])
+        
+        with col_header:
+            # 這裡放原本的標題
+            st.header("🔑 API 設定")
             
+        with col_btn:
+            # 【視覺微調】
+            # 因為 Header 字很大，按鈕會顯得太上面
+            # 加一行空字串讓按鈕往下推一點點，視覺上會比較對齊
+            st.write("") 
+            
+            # 顯示問號按鈕，點擊後呼叫彈窗
+            if st.button("❓", key="btn_api_help", help="點擊查看教學"):
+                show_gemini_tutorial() # 呼叫定義好的彈窗函數
+
+        # --- 下面放原本的輸入框 (不用再分欄了，因為按鈕已經在標題旁邊) ---
+        
+        llm_key = st.text_input(
+            "Google Gemini API Key", # 這裡的 label 可以留著，或改成 "" 隱藏
+            value=setmgr.settings.gemini_api_key, 
+            type="password", 
+            placeholder="貼上你的 AI Studio Key",
+            label_visibility="collapsed" # 選擇性：如果你覺得上面已經有標題，這裡想隱藏 label
+        )
+
         submitted = st.button("🚀 開始分析", type="primary")
         
     return {
