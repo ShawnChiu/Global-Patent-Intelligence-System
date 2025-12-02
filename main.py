@@ -46,7 +46,7 @@ def main():
         with st.spinner("正在搜索專利 ..."):
             try:
                 gpss_client.search(query)
-                st.success("搜索到： " + str(gpss_client.get_num()) + "筆資料")
+                st.success("搜索到： " + str(gpss_client.search_result) + "筆資料")
             except Exception as e:
                 st.error(f"系統發生錯誤: {str(e)}")
 
