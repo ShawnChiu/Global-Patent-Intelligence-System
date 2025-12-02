@@ -270,7 +270,7 @@ def render_charts_from_files(files_dict):
         else:
             st.info("請上傳 申請人/專利權人 統計表")
 
-    # === Tab 3: 主要布局國家 ===
+    # === Tab 3: 主要布局國家 (橫條圖版) ===
     with tab3:
         st.subheader("🌍 主要布局國家")
         if files_dict.get("country"):
@@ -279,17 +279,49 @@ def render_charts_from_files(files_dict):
                 df_plot = df_country.iloc[:, :2].copy()
                 df_plot.columns = ['Country', 'Count']
                 
-                # 清洗數據
+                # 1. 清洗數據
                 df_plot['Count'] = pd.to_numeric(
                     df_plot['Count'].astype(str).str.replace(',', ''), 
                     errors='coerce'
                 )
                 
-                fig = px.pie(df_plot.head(10), values='Count', names='Country', 
-                             title="全球專利佈局佔比", hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
+                # 2. 準備繪圖數據 (取前 10 名)
+                # 注意：為了讓長條圖中「數量最多」的排在「最上面」，
+                # 我們需要先將數據「由小到大」排序 (因為 Plotly 預設是從下畫到上)
+                df_vis = df_plot.head(10).sort_values(by='Count', ascending=True)
+
+                # 3. 繪製橫條圖 (orientation='h')
+                fig = px.bar(
+                    df_vis, 
+                    x='Count', 
+                    y='Country', 
+                    orientation='h',  # 設定為橫向
+                    title="全球專利佈局 (Top 10)",
+                    text='Count',     # 在條形上顯示數字
+                    color='Count',    # 依數值深淺上色
+                    color_continuous_scale='Viridis' # 設定漸層色系 (例如 Blues, Viridis, Teal)
+                )
+                
+                # 優化版面
+                fig.update_layout(
+                    xaxis_title="專利數量",
+                    yaxis_title="", # 移除 Y 軸標題 (因為國家名稱很明顯)
+                    showlegend=False,
+                    height=500 # 設定高度
+                )
+                
+                # 讓數字顯示在條形圖的右側或內部
+                fig.update_traces(textposition='outside') 
+
+                # 4. 顯示與存檔
                 st.plotly_chart(fig, theme="streamlit", width="stretch")
 
-                fig.write_image(".data\/chart3.png", format="png", width=1200, height=800, scale=2)
+                # 確保資料夾存在
+                import os
+                if not os.path.exists(".data"):
+                    os.makedirs(".data")
+                    
+                fig.write_image(".data/chart3.png", format="png", width=1200, height=800, scale=2)
         else:
             st.info("請上傳 國別 統計表")
 

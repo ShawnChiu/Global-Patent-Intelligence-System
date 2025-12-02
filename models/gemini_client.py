@@ -20,46 +20,44 @@ class GeminiClient:
 
         Task: Convert the user's "Patent Analysis Topic" into a syntactically perfect Boolean Search Query.
 
+        [CRITICAL CONSTRAINT: LENGTH LIMIT]
+        The system has a strict limit of 1900 bytes. Since CJK (Chinese/Japanese/Korean) characters take up 3 bytes each:
+        1. **Prioritize Precision**: Select ONLY the top 2-3 most critical synonyms per language. Do not list every possible variation.
+        2. **Language Priority**: English > Traditional Chinese > Simplified Chinese > Japanese > Korean.
+        3. **Drop Low-Value Terms**: If a term is very generic (e.g., "System", "Method"), do not expand it into all languages.
+
         [CRITICAL RULE: SYNTAX INTEGRITY]
-        1. **Balanced Parentheses**: You must ensure that every opening parenthesis `(` has a corresponding closing parenthesis `)`. Count them carefully.
-        2. **Field Qualifiers**: Apply field qualifiers (e.g., `@TI,AB,CL,DE`) correctly at the end of groups.
-        3. **Logic Structure**: Follow the "Strict Syntax Template" below rigidly.
+        1. **Balanced Parentheses**: Ensure every opening `(` has a matching closing `)`.
+        2. **Structure**: Follow the "Strict Syntax Template" rigidly.
 
         [Strict Syntax Template]
-        The final query MUST follow this exact structure:
         ( ( <POSITIVE_KEYWORDS> ) ) NOT ( <NEGATIVE_KEYWORDS>@TI ) AND ID=:20241231 AND ( <IPC_CODES> )
 
         [Construction Steps]
-        1. **Positive Keywords Construction**:
+        1. **Positive Keywords**:
         - Identify core concepts.
-        - Expand into 5 languages: English, Traditional Chinese, Simplified Chinese, Japanese, Korean.
-        - Group ALL synonyms for one concept using OR.
-        - Combine different concepts using AND.
-        - Apply `@TI,AB,CL,DE` to the positive groups.
-        - Example: `( (Car OR 車 OR...)@TI,AB,CL,DE AND (Battery OR 電池 OR...)@TI,AB,CL,DE )`
+        - Expand into 5 languages (EN, TC, SC, JP, KR).
+        - **LIMIT**: Max 3 synonyms per language to save space.
+        - Example: `( (Car OR 車 OR 自動車)@TI,AB,CL,DE AND (Battery OR 電池)@TI,AB,CL,DE )`
 
-        2. **Negative Keywords Construction (Noise Filtering)**:
-        - Identify irrelevant keywords (e.g., if topic is "Car", exclude "Toy", "Model").
-        - Expand into 5 languages.
-        - Combine with OR.
+        2. **Negative Keywords (Noise Filtering)**:
+        - Identify irrelevant keywords.
+        - **Keep it brief**: Use broadly excluding terms.
         - Apply `@TI` ONLY.
-        - Example: `(Toy OR Model OR 玩具 OR 模型)@TI`
 
         3. **IPC Classification**:
-        - Infer relevant IPC codes (e.g., G06F*, H04L*).
+        - Infer relevant IPC codes (e.g., G06F*).
         - Combine with OR.
-        - Example: `IC=G06F* OR IC=H04L*`
 
         [Reference Example]
         Input Topic: "駛入新視界：智慧座艙AR-HUD專利分析與布局"
-        Target Output: ( ( (HUD OR 抬頭顯示器 OR 平視顯示器 OR ヘッドアップディスプレイ OR 헤드 업 디스플레이)@TI,AB,CL,DE AND (AR OR Augmented Reality OR 擴增實境 OR 3D OR Hologram OR 全息 OR Waveguide OR 光波導)@TI,AB,CL,DE ) ) NOT ( (Helmet OR Wearable OR Glasses OR VR OR Game OR 穿戴式 OR 頭盔 OR 眼鏡 OR 遊戲)@TI ) AND ID=:20241231 AND (IC=G02B* OR IC=B60K*)
+        Target Output: ( ( (HUD OR Head Up Display OR 抬頭顯示器 OR 平視顯示器 OR ヘッドアップディスプレイ)@TI,AB,CL,DE AND (AR OR Augmented Reality OR 擴增實境 OR Waveguide OR 光波導)@TI,AB,CL,DE ) ) NOT ( (Helmet OR Wearable OR Glasses OR VR OR 穿戴式 OR 頭盔 OR 眼鏡)@TI ) AND ID=:20241231 AND (IC=G02B* OR IC=B60K*)
 
         [New Topic]
         {topic}
 
         [Output]
-        Return ONLY the raw Boolean Query String. Do NOT include markdown code blocks, explanations, or labels. 
-        Ensure the string starts with `(` and checks out for balanced parentheses.
+        Return ONLY the raw Boolean Query String. Do NOT include markdown blocks.
         """
         
         try:
