@@ -78,10 +78,9 @@ class GPSSClient:
         self.search_page.locator("input[src*='search_btn.png']").click()
         self.search_page.wait_for_load_state()
 
-        self.search_page.locator("div[id='subdbdiv'] span[class='R_rec']").first.click()
-
+        self.search_page.locator("div[id='subdbdiv'] li").filter(has_text="全部").locator(":scope:not(.waiting)").locator("a").click(timeout=0)
+        self.search_page.wait_for_load_state()
         self.search_result = self.get_num(self.search_page.locator("font[class='numfmt']").first)
-
         self.search_page.locator("input[value='家族去重']").click(timeout = 0)
         self.search_page.locator("input[value='檢索去重']").click(timeout = 0)    
 

@@ -127,6 +127,7 @@ def main():
                     
             except Exception as e:
                 st.error(f"報告生成失敗: {str(e)}")
+    browser.close()
         
         
 if __name__ == "__main__":
