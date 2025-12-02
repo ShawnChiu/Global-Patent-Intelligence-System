@@ -4,7 +4,7 @@ import plotly.express as px
 import re
 import pandas as pd
 
-import config
+from services.settings_manager import setmgr
 
 FIELD_OPTS = {
     "TI/AB/CL": "標題/摘要/範圍 (複合)",
@@ -25,8 +25,8 @@ def render_sidebar():
 
         st.header("🌸 GPSS 帳號密碼")
 
-        user = st.text_input("GPSS 使用者代碼", value=config.DEFAULT_USER_ID, type="default", placeholder="輸入你的 GPSS 使用者代碼")
-        password = st.text_input("GPSS 密碼", value=config.DEFAULT_USER_PW, type="password", placeholder="輸入你的 GPSS 密碼")
+        user = st.text_input("GPSS 使用者代碼", value=setmgr.settings.user_id, type="default", placeholder="輸入你的 GPSS 使用者代碼")
+        password = st.text_input("GPSS 密碼", value=setmgr.settings.user_pw, type="password", placeholder="輸入你的 GPSS 密碼")
 
         st.header("🔍 搜尋條件")
 
@@ -62,8 +62,8 @@ def render_sidebar():
 
         if matrix_mode == "關鍵字規則 (Rule-based)":
             with st.expander("定義關鍵字規則", expanded=True):
-                tech_conf = st.text_area("技術手段 (X軸)", value=config.DEFAULT_TECH_CONFIG, height=150)
-                effect_conf = st.text_area("達成功效 (Y軸)", value=config.DEFAULT_EFFECT_CONFIG, height=150)
+                tech_conf = st.text_area("技術手段 (X軸)", value=setmgr.settings.tech_config, height=150)
+                effect_conf = st.text_area("達成功效 (Y軸)", value=setmgr.settings.effect_config, height=150)
             conf_source = st.text_input("關鍵字來源說明 (選填)", value="", type="default", placeholder="輸入關鍵字來源")
                 
         else: # AI Mode
@@ -76,7 +76,7 @@ def render_sidebar():
         st.divider()
         st.header("🔑 API 設定")
 
-        llm_key = st.text_input("Google Gemini API Key", value=config.DEFAULT_GEMINI_API, type="password", placeholder="貼上你的 AI Studio Key")
+        llm_key = st.text_input("Google Gemini API Key", value=setmgr.settings.gemini_api_key, type="password", placeholder="貼上你的 AI Studio Key")
             
         submitted = st.button("🚀 開始分析", type="primary")
         

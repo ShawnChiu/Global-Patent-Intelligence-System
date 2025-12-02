@@ -1,5 +1,5 @@
 from docx import Document
-from docx.shared import Pt, Inches, RGBColor, Cm
+from docx.shared import Pt, Inches, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from io import BytesIO
@@ -150,6 +150,12 @@ class ReportGenrator:
             # 如果您有圖片檔案，可以使用: doc.add_picture('path_to_image.png', width=Inches(6))
 
         doc.add_page_break()
+
+        if not self.matrix_json:
+            buffer = BytesIO()
+            doc.save(buffer)
+            buffer.seek(0)
+            return buffer
 
         # --- 5. 技術與功效分類表 ---
         # 技術分類表格

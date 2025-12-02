@@ -1,7 +1,6 @@
 # 檔案位置：config.py (在專案根目錄，與 main.py 同層)
 
 # API 設定
-API_URL = "https://tiponet.tipo.gov.tw/gpss1/gpsskmc/gpss_api"
 DEFAULT_GEMINI_API = ""
 DEFAULT_USER_ID = ""
 DEFAULT_USER_PW = ""

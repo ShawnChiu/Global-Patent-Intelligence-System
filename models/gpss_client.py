@@ -1,10 +1,8 @@
 # models/gpss_client.py
 from playwright.sync_api import sync_playwright
 import os
-import json
 from services.captcha import CaptchaSolver
 import re
-
 
 class GPSSClient:
     
@@ -68,7 +66,6 @@ class GPSSClient:
     def fetch_data(self, query):
         self.search(query)
         self.fetch_diagrams()
-        self.fetch_names_and_contents()
     
     def search(self, query):
         self.search_page.goto(self.home_url)
