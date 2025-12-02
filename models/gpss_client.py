@@ -139,7 +139,7 @@ class GPSSClient:
         self.search_page.wait_for_selector("div[class='msgfmt']", timeout = 0)
 
         page_temp = self.open_new_page(self.search_page.locator("div[class='msgfmt'] a[target='_proj']"))
-        page = self.open_new_page(page_temp.locator("span[title='Matrix']"))
+        page = self.open_new_page(page_temp.locator("div[id='mtrdiv']"))
         page_temp.close()
         page.wait_for_selector("span[id='tech_add']", timeout = 0)
 
