@@ -12,7 +12,7 @@ from playwright.sync_api import sync_playwright
 from models.gpss_client import GPSSClient
 from services.analyzer import PatentAnalyzer
 from services.gen_report import ReportGenrator
-from views.components import render_sidebar, render_charts_from_files
+from views.components import render_sidebar, parse_diagrams,render_charts
 from models.gemini_client import GeminiClient
 from services.settings_manager import setmgr
 
@@ -119,7 +119,7 @@ def main():
         render_success_place = st.empty()
         report_success_place = st.empty()
         with st.spinner("正在讀取並渲染圖表並生成簡報 ..."):
-            chart_buffers = render_charts_from_files(gpss_client.diagram_buffers)
+            parse_diagrams(gpss_client.diagram_buffers)
             render_success_place.success("渲染圖表完成！")
             try:
                 regen = ReportGenrator(
@@ -130,7 +130,7 @@ def main():
                     theme=inputs["topic"], 
                     # 注意：確認 inputs 裡面是否有 "source" 這個 key，原本代碼有用到
                     source=[inputs.get("source", ""), inputs["conf_source"]],
-                    chart_buffers=chart_buffers 
+                    chart_buffers=st.session_state.chart_buffers["img"]
                 )
                 
                 # 【關鍵修改】改為回傳 BytesIO 物件，不存硬碟
@@ -153,6 +153,7 @@ def main():
 
         browser.close()
         p.stop()
+    render_charts()
         
         
 if __name__ == "__main__":
