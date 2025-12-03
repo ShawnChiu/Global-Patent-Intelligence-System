@@ -240,8 +240,8 @@ def parse_diagrams(buffers):
         files_dict (dict): 字典，Values 可以是 檔案路徑(str) 或 記憶體緩衝區(BytesIO)
     """
     
-    if "chart_buffers" not in st.session_state:
-        st.session_state.chart_buffers = {}
+    if "results" not in st.session_state:
+        st.session_state.results = {}
     
     fig_buffers = {}
     img_buffers = {}
@@ -529,53 +529,93 @@ def parse_diagrams(buffers):
         except Exception as e:
             st.error(f"矩陣解析錯誤: {str(e)}")
 
-    st.session_state.chart_buffers["fig"] = fig_buffers
-    st.session_state.chart_buffers["img"] = img_buffers
+    st.session_state.results["fig"] = fig_buffers
+    st.session_state.results["img"] = img_buffers
 
-def render_charts():
-    if "chart_buffers" not in st.session_state:
+def render_results():
+    if "results" not in st.session_state:
         return
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    
+    docx = st.session_state.results.get("docx")
+    if docx:
+        # 顯示下載按鈕
+        st.download_button(
+            label="📥 下載專利分析期末報告 (.docx)",
+            data=docx,
+            file_name="專利分析報告.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        "布林檢索式", 
         "技術領域分類分析", 
         "技術領先企業", 
         "主要布局國家", 
         "專利申請趨勢", 
+        "矩陣分析關鍵字", 
         "技術功效矩陣"
     ])
 
-    
-
-    # === Tab 1: IPC 技術分類 ===
     with tab1:
-        st.subheader("📊 技術領域分類 (IPC)")
-        fig = st.session_state.chart_buffers["fig"].get("ipc")
-        if fig:
-            st.plotly_chart(fig, theme="streamlit", width="stretch") # use_container_width is deprecated
+        st.subheader("🧌 布林檢索式")
+        st.code(st.session_state.results.get("query"), language=None)
 
-    # === Tab 2: 技術領先企業 ===
+
     with tab2:
-        st.subheader("🏆 技術領先企業 (Assignee)")
-        fig = st.session_state.chart_buffers["fig"].get("assignee")
+        st.subheader("📊 技術領域分類 (IPC)")
+        fig = st.session_state.results["fig"].get("ipc")
         if fig:
             st.plotly_chart(fig, theme="streamlit", width="stretch") # use_container_width is deprecated
+        else:
+            st.error("找不到圖表")
 
-    # === Tab 3: 主要布局國家 ===
     with tab3:
-        st.subheader("🌍 主要布局國家")
-        fig = st.session_state.chart_buffers["fig"].get("country")
+        st.subheader("🏆 技術領先企業 (Assignee)")
+        fig = st.session_state.results["fig"].get("assignee")
         if fig:
             st.plotly_chart(fig, theme="streamlit", width="stretch") # use_container_width is deprecated
+        else:
+            st.error("找不到圖表")
 
-    # === Tab 4: 專利申請趨勢 ===
+
     with tab4:
-        st.subheader("📈 專利申請趨勢")
-        fig = st.session_state.chart_buffers["fig"].get("trend_range")
+        st.subheader("🌍 主要布局國家")
+        fig = st.session_state.results["fig"].get("country")
         if fig:
             st.plotly_chart(fig, theme="streamlit", width="stretch") # use_container_width is deprecated
+        else:
+            st.error("找不到圖表")
 
-    # === Tab 5: 技術功效矩陣 ===
     with tab5:
-        st.subheader("💡 技術功效矩陣")
-        fig = st.session_state.chart_buffers["fig"].get("matrix")
+        st.subheader("📈 專利申請趨勢")
+        fig = st.session_state.results["fig"].get("trend_range")
         if fig:
             st.plotly_chart(fig, theme="streamlit", width="stretch") # use_container_width is deprecated
+        else:
+            st.error("找不到圖表")
+
+    with tab6:
+        st.markdown("""
+        <style>
+            /* 調整字體大小 */
+            .stCodeBlock pre {
+                font-size: 12px !important; /* 改小字體 */
+            }
+            
+            /* 限制最大高度 (超過會有捲軸) */
+            .stCodeBlock {
+                max-height: 300px; /* 限制高度 */
+                overflow-y: auto;  /* 加上垂直捲軸 */
+            }
+        </style>
+        """, unsafe_allow_html=True)
+        st.subheader("🏷️ 矩陣分析關鍵字")      
+        st.code(st.session_state.results.get("matrix_data"), language=None)  
+
+    with tab7:
+        st.subheader("💡 技術功效矩陣")
+        fig = st.session_state.results["fig"].get("matrix")
+        if fig:
+            st.plotly_chart(fig, theme="streamlit", width="stretch") # use_container_width is deprecated
+        else:
+            st.error("找不到圖表")

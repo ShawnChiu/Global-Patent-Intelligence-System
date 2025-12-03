@@ -12,7 +12,7 @@ from playwright.sync_api import sync_playwright
 from models.gpss_client import GPSSClient
 from services.analyzer import PatentAnalyzer
 from services.gen_report import ReportGenrator
-from views.components import render_sidebar, parse_diagrams,render_charts
+from views.components import render_sidebar, parse_diagrams,render_results
 from models.gemini_client import GeminiClient
 from services.settings_manager import setmgr
 
@@ -25,7 +25,10 @@ def main():
     # 1. 取得使用者輸入 (View)
     inputs = render_sidebar()
 
-    if inputs["submitted"]:        # 2. 初始化客戶端 (Model)
+    if inputs["submitted"]:       
+        st.session_state.results = {}
+
+        # 2. 初始化客戶端 (Model)
         p = sync_playwright().start()
         browser = p.chromium.launch(headless=False)
         with st.spinner("正在登入GPSS ..."):
@@ -52,6 +55,7 @@ def main():
                 gpss_client.search(query)
                 st.success("搜索到： " + str(gpss_client.search_result) + "筆資料")
                 setmgr.settings.query = query
+                st.session_state.results["query"] = query
             except Exception as e:
                 st.error(f"系統發生錯誤: {str(e)}")
 
@@ -113,6 +117,7 @@ def main():
 
         with st.spinner("正在進行矩陣分析"):
             gpss_client.fill_matrix_form(matrix_json)
+            st.session_state.results["matrix_data"] = matrix_json
             st.success("矩陣分析完成！")
 
 
@@ -130,22 +135,15 @@ def main():
                     theme=inputs["topic"], 
                     # 注意：確認 inputs 裡面是否有 "source" 這個 key，原本代碼有用到
                     source=[inputs.get("source", ""), inputs["conf_source"]],
-                    chart_buffers=st.session_state.chart_buffers["img"]
+                    chart_buffers=st.session_state.results["img"]
                 )
                 
                 # 【關鍵修改】改為回傳 BytesIO 物件，不存硬碟
                 # 請確認 services/gen_report.py 已經改成回傳 buffer
-                report_buffer = regen.gen_report() 
+                st.session_state.results["docx"] = regen.gen_report() 
                 
                 report_success_place.success("分析報告完成！")
                 
-                # 顯示下載按鈕
-                st.download_button(
-                    label="📥 下載專利分析期末報告 (.docx)",
-                    data=report_buffer,
-                    file_name="專利分析報告.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                )
                     
             except Exception as e:
                 st.error(f"報告生成失敗: {str(e)}")
@@ -153,7 +151,7 @@ def main():
 
         browser.close()
         p.stop()
-    render_charts()
+    render_results()
         
         
 if __name__ == "__main__":
