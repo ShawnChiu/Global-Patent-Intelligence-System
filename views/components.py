@@ -1,21 +1,12 @@
 # 檔案位置：views/components.py
 import streamlit as st
 import plotly.express as px
-import re
 import pandas as pd
 import os
 import io
 
-from services.settings_manager import setmgr
 
-FIELD_OPTS = {
-    "TI/AB/CL": "標題/摘要/範圍 (複合)",
-    "TI": "標題 (Title)", "AB": "摘要 (Abstract)", "CL": "專利範圍 (Claims)",
-    "CI": "IPC 分類號", "PR": "優先權 (Priority)", "PN": "公告號",
-    "PA": "申請人", "IN": "發明人"
-}
-
-@st.dialog("如何取得 Google Gemini API Key")
+@st.dialog("❓ 如何取得 Google Gemini API Key")
 def show_gemini_tutorial():
     st.markdown("""
         <style>
@@ -37,10 +28,10 @@ def show_gemini_tutorial():
     
     *(建議：申請後請妥善保存，不要洩漏給他人)*
     """)
-    if st.button("關閉", type="primary", use_container_width=True):
+    if st.button("💾 儲存並關閉", type="primary", use_container_width=True):
         st.rerun()
 
-@st.dialog("📝 編輯矩陣分析")
+@st.dialog("✏️ 編輯矩陣分析")
 def show_matrix_editor():
     st.markdown("""
         <style>
@@ -60,9 +51,9 @@ def show_matrix_editor():
     
     with col1:
         st.subheader("🛠️ 技術手段 (X軸)")
-        new_tech = st.text_area(
+        st.session_state.tech = st.text_area(
             "輸入技術關鍵字 (每行一個)",
-            value=st.session_state.get("final_tech", ""),
+            value=st.session_state.tech,
             height=300, # 高度拉長
             label_visibility="collapsed",
             key="dlg_tech_input"
@@ -70,26 +61,21 @@ def show_matrix_editor():
 
     with col2:
         st.subheader("✨ 達成功效 (Y軸)")
-        new_effect = st.text_area(
+        st.session_state.eff = st.text_area(
             "輸入功效關鍵字 (每行一個)",
-            value=st.session_state.get("final_eff", ""),
+            value=st.session_state.eff,
             height=300, # 高度拉長
             label_visibility="collapsed",
             key="dlg_effect_input"
         )
 
-    new_source = st.text_input("來源說明 (選填)", value="", type="default", placeholder="輸入來源")
+    st.session_state.conf_source = st.text_input("來源說明 (選填)", value=st.session_state.conf_source, type="default", placeholder="輸入來源")
 
     # 儲存按鈕
-    if st.button("💾 儲存並關閉", type="primary", use_container_width=True):
-        st.session_state.final_tech = new_tech
-        st.session_state.final_eff = new_effect
-        st.session_state.final_conf_source = new_source
-        st.rerun()
+    st.button("💾 儲存並關閉", type="primary", use_container_width=True, on_click=st.rerun)
 
-@st.dialog("📝 編輯布林檢索式")
+@st.dialog("✏️ 編輯布林檢索式")
 def show_query_editor():
-    
     st.markdown("""
         <style>
         /* 針對 Dialog (模態視窗) 內的關閉按鈕進行隱藏 */
@@ -103,34 +89,50 @@ def show_query_editor():
     st.write("請在下方編輯您的完整檢索式：")
     
     # 使用 text_area 讓輸入框變很大，方便編輯多行
-    new_query = st.text_area(
+    st.session_state.query = st.text_area(
         "檢索式內容",
-        value=st.session_state.get("final_query", ""), # 從 session 讀取
+        value=st.session_state.query, # 從 session 讀取
         height=400, # 設定高度為 400px，夠大！
         label_visibility="collapsed"
     )
     
-    new_source = st.text_input("來源說明 (選填)", value="", type="default", placeholder="輸入來源")
+    st.session_state.source = st.text_input("來源說明 (選填)", value=st.session_state.source, type="default", placeholder="輸入來源")
 
     if st.button("💾 儲存並關閉", type="primary", use_container_width=True):
-        st.session_state.final_query = new_query # 更新 Session
-        st.session_state.final_source = new_source
-        st.rerun() # 重新整理頁面以套用
+        st.rerun()
 
-def render_sidebar():
+@st.dialog("📝 基本資料設定")
+def show_basic_info():
+    st.markdown("""
+        <style>
+        /* 針對 Dialog (模態視窗) 內的關閉按鈕進行隱藏 */
+        div[role="dialog"] button[aria-label="Close"] {
+            display: none;
+        }
+        </style>
+        """, 
+        unsafe_allow_html=True
+    )
+    st.write("請在下方編輯您的完整檢索式：")
+    
+    st.header("🎓 學生資料")
+    st.session_state.name = st.text_input("姓名", value=st.session_state.name, type="default", placeholder="輸入你的姓名")
+    st.session_state.student_id = st.text_input("學號", value=st.session_state.student_id, type="default", placeholder="輸入你的學號") 
+
+    st.header("🌸 GPSS 帳號密碼")
+    st.session_state.gpss_id = st.text_input("GPSS 使用者代碼", value=st.session_state.gpss_id, type="default", placeholder="輸入你的 GPSS 使用者代碼")
+    st.session_state.gpss_pw = st.text_input("GPSS 密碼", value=st.session_state.gpss_pw, type="password", placeholder="輸入你的 GPSS 密碼")   
+
+    if st.button("💾 儲存並關閉", type="primary", use_container_width=True):
+        st.rerun()
+
+def render_sidebar():   
     with st.sidebar:
         st.header("🍬 專利主題")
-        topic = st.text_input("輸入技術主題", value="", type="default", placeholder="輸入你的專利技術主題")
+        st.session_state.topic = st.text_input("輸入技術主題", value="", type="default", placeholder="輸入你的專利技術主題")
 
-        st.header("🎓 學生資料")
-        name = st.text_input("姓名", value="", type="default", placeholder="輸入你的姓名")
-        student_id = st.text_input("學號", value="", type="default", placeholder="輸入你的學號")
-        
-
-        st.header("🌸 GPSS 帳號密碼")
-
-        user = st.text_input("GPSS 使用者代碼", value=setmgr.settings.user_id, type="default", placeholder="輸入你的 GPSS 使用者代碼")
-        password = st.text_input("GPSS 密碼", value=setmgr.settings.user_pw, type="password", placeholder="輸入你的 GPSS 密碼")
+        st.header("📝 基本資料")
+        st.button("✏️ 點擊編輯基本資料", help="點擊編輯基本資料", key="btn_edit_basic_info", on_click=show_basic_info)
 
         st.header("🔍 搜尋條件")
 
@@ -138,29 +140,9 @@ def render_sidebar():
             "選擇搜尋模式",
             ["搜尋布林檢索式", "AI 檢索式推論 (Gemini LLM)"],
         )
-                
-        # --- 初始化 Session State (如果還沒有的話) ---
-        if "final_query" not in st.session_state:
-            st.session_state.final_query = setmgr.settings.query
-            st.session_state.final_source = ""
-            st.session_state.final_tech = setmgr.settings.tech_config
-            st.session_state.final_eff = setmgr.settings.effect_config
-            st.session_state.final_conf_source = ""
-
-        query = ""
-        source = ""
         
         if search_mode == "搜尋布林檢索式":
-            # --- 修改開始：改用「預覽框 + 放大按鈕」的排版 ---
-                                    
-            if st.button("✏️ 點擊編輯檢索式", help="點擊編輯檢索式", key="btn_edit_query"):
-                show_query_editor()
-            
-            query = st.session_state.final_query
-            
-            # 來源說明
-            source = st.session_state.final_source
-
+            st.button("✏️ 點擊編輯檢索式", help="點擊編輯檢索式", key="btn_edit_query", on_click=show_query_editor)
         else:
             st.markdown("""
             **🧠 AI 自動生成布林檢索式** 系統將根據主題自動生成複雜的布林檢索式
@@ -171,29 +153,19 @@ def render_sidebar():
         st.divider()
         st.header("🤖 分析設定")
         
-        matrix_mode = st.radio(
+        st.session_state.matrix_mode = st.radio(
             "選擇矩陣分析模式",
             ["關鍵字規則 (Rule-based)", "AI 語意推論 (Gemini LLM)"],
             captions=["快速、免費，需定義關鍵字", "精準、自動分類，需 Google API Key"]
         )
-        
-        tech_conf = ""
-        effect_conf = ""
-        llm_key = ""
-        conf_source = ""
 
-        if matrix_mode == "關鍵字規則 (Rule-based)":
-            if st.button("✏️ 點擊編輯關鍵字", help="點擊編輯關鍵字", key="btn_edit_matrix"):
-                show_matrix_editor()
-            tech_conf = st.session_state.final_tech
-            effect_conf = st.session_state.final_eff
-            conf_source = st.session_state.final_conf_source
-                
+        if st.session_state.matrix_mode == "關鍵字規則 (Rule-based)":
+            st.button("✏️ 點擊編輯關鍵字", help="點擊編輯關鍵字", key="btn_edit_matrix", on_click=show_matrix_editor)    
         else: # AI Mode
             st.markdown("""
             **🧠 AI 全自動分類** 系統將自動閱讀專利摘要並分析功效定義
             """)
-            if not llm_key:
+            if not st.session_state.llm_key:
                 st.warning("請輸入 Key 以啟動 AI 功能")
         
         st.divider()
@@ -204,33 +176,32 @@ def render_sidebar():
 
 
         # --- 下面放輸入框 ---
-        llm_key = st.text_input(
+        st.session_state.gemini_api_key = st.text_input(
             "Google Gemini API Key", 
-            value=setmgr.settings.gemini_api_key, 
+            value=st.session_state.gemini_api_key, 
             type="password", 
             placeholder="貼上你的 AI Studio Key",
             label_visibility="collapsed"
         )
 
-        submitted = st.button("🚀 開始分析", type="primary")
+        st.session_state.submitted = st.button("🚀 開始分析", type="primary")
         
     return {
-        "name": name,
-        "student_id": student_id,
-        "user": user,
-        "password": password,
-        "source": source,
-        "query": query, 
-        "tech_conf": tech_conf,
-        "effect_conf": effect_conf,
-        "matrix_mode": matrix_mode, 
-        "search_mode": search_mode,
-        "llm_key": llm_key,
-        "submitted": submitted,
-        "conf_source": conf_source,
-        "topic": topic
+        "name": st.session_state.name,
+        "student_id": st.session_state.student_id,
+        "user": st.session_state.gpss_id,
+        "password": st.session_state.gpss_pw,
+        "source": st.session_state.source,
+        "query": st.session_state.query, 
+        "tech_conf": st.session_state.tech,
+        "effect_conf": st.session_state.eff,
+        "matrix_mode": st.session_state.matrix_mode, 
+        "search_mode": st.session_state.search_mode,
+        "llm_key": st.session_state.gemini_api_key,
+        "submitted": st.session_state.submitted,
+        "conf_source": st.session_state.conf_source,
+        "topic": st.session_state.topic
     }
-
 
 def parse_diagrams(buffers):
 
@@ -533,9 +504,8 @@ def parse_diagrams(buffers):
     st.session_state.results["img"] = img_buffers
 
 def render_results():
-    if "results" not in st.session_state:
-        return
-    
+    if not st.session_state.results:
+        return  
     docx = st.session_state.results.get("docx")
     if docx:
         # 顯示下載按鈕
@@ -619,3 +589,7 @@ def render_results():
             st.plotly_chart(fig, theme="streamlit", width="stretch") # use_container_width is deprecated
         else:
             st.error("找不到圖表")
+
+def render_all():
+    render_sidebar()
+    render_results()

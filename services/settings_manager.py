@@ -2,18 +2,20 @@
 import json
 import os
 from dataclasses import dataclass, asdict
-import config  # 引入您的原始預設值檔案
+import config
 
 SETTINGS_FILE = ".data/user_settings.json"
 
 @dataclass
 class UserSettings:
-    user_id: str = config.DEFAULT_USER_ID
-    user_pw: str = config.DEFAULT_USER_PW
+    gpss_id: str = config.DEFAULT_GPSS_ID
+    gpss_pw: str = config.DEFAULT_GPSS_PW
     tech_config: str = config.DEFAULT_TECH_CONFIG
     effect_config: str = config.DEFAULT_EFFECT_CONFIG
-    gemini_api_key: str = config.DEFAULT_GEMINI_API
+    gemini_api_key: str = config.DEFAULT_GEMINI_API_KEY
     query: str = config.DEFAULT_QUERY
+    name : str = config.DEFAULT_NAME
+    student_id : str = config.DEFAULT_STUDENT_ID
 
 class SettingsManager:
     def __init__(self, filepath=SETTINGS_FILE):

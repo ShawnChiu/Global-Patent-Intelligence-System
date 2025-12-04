@@ -8,8 +8,10 @@ import pandas as pd
 
 class GPSSClient:
     
-    def __init__(self, browser):
-        self.context = browser.new_context()
+    def __init__(self):
+        self.p = sync_playwright().start()
+        self.browser = self.p.chromium.launch(headless=False)
+        self.context = self.browser.new_context()
         self.search_page = self.context.new_page()
 
         self.home_url = "https://tiponet.tipo.gov.tw/gpss2/gpsskmc/gpssbkm"
@@ -179,3 +181,8 @@ class GPSSClient:
         self.download_data("matrix", page.locator("input[title='Export']"), page)
 
         page.close()
+
+    def close(self):
+        self.context.close()
+        self.browser.close()
+        self.p.stop()

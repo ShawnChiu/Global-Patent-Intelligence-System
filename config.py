@@ -1,9 +1,12 @@
 # 檔案位置：config.py (在專案根目錄，與 main.py 同層)
 
+DEFAULT_NAME ="Good Leader 👍"
+DEFAULT_STUDENT_ID = "B113150"
+
 # API 設定
-DEFAULT_GEMINI_API = ""
-DEFAULT_USER_ID = ""
-DEFAULT_USER_PW = ""
+DEFAULT_GEMINI_API_KEY = ""
+DEFAULT_GPSS_ID = ""
+DEFAULT_GPSS_PW = ""
 
 DEFAULT_QUERY = "(IGS OR \"International Games System\" OR 鈊象 OR \"インターナショナル ゲーム システム\" OR \"인터내셔널 게임 시스템\")@TI,AB,CL,DE AND ID=:20241231 AND (IC=A63F* OR IC=G07F* OR IC=G06F*)"
 

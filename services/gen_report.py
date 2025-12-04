@@ -6,10 +6,10 @@ from io import BytesIO
 import re
 
 class ReportGenrator:
-    def __init__(self, theme = "", search_result = [0, 0], query = "", students_data = [], source = ["", ""], matrix_json = [], chart_buffers = {}):        
+    def __init__(self, topic = "", search_result = [0, 0], query = "", students_data = [], source = ["", ""], matrix_json = [], chart_buffers = {}):        
         # 初始化所有需要的欄位
         self.report_title = "智慧財產權實戰策略期末報告"
-        self.theme = theme
+        self.topic = topic
         self.search_result = search_result
         self.query = query
         self.scope = self.extract_ipc_scope(query)
@@ -17,23 +17,6 @@ class ReportGenrator:
         self.source = source
         self.matrix_json = matrix_json
         self.chart_buffers = chart_buffers
-
-    def set(self, theme = None, search_result = None, query = None, students_data = None, source = None, matrix_json = None, chart_buffers = None):
-        if theme:
-            self.theme = theme
-        if search_result:
-            self.search_result = search_result
-        if query:
-            self.query = query
-            self.scope = self.extract_ipc_scope(query)
-        if students_data:
-            self.students_data = students_data
-        if source:
-            self.source = source
-        if matrix_json:
-            self.matrix_json = matrix_json
-        if chart_buffers:
-            self.chart_buffers = chart_buffers
 
     def extract_ipc_scope(self, query):
         """
@@ -104,7 +87,7 @@ class ReportGenrator:
         # 選定主題
         p = doc.add_paragraph()
         set_chinese_font(p.add_run('一、選定主題：'), bold=True)
-        set_chinese_font(p.add_run(f"本研究針對{self.theme}專利分析與布局進行專利檢索分析。"))
+        set_chinese_font(p.add_run(f"本研究針對{self.topic}專利分析與布局進行專利檢索分析。"))
 
         p = doc.add_paragraph()
         set_chinese_font(p.add_run('二、專家建議、網路資源、相關報導、領導廠商（或有利人士）'), bold=True)
