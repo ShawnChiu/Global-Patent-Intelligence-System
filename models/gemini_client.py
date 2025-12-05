@@ -20,17 +20,20 @@ class GeminiClient:
 
         Task: Convert the user's "Patent Analysis Topic" into a syntactically perfect, MAXIMIZED Boolean Search Query.
 
-        [CRITICAL GOAL: MAXIMIZE RICHNESS WITHIN LIMIT]
-        The system allows up to **1600 bytes**. Your goal is to produce a query **between 1400 and 1600 bytes**.
+        [CRITICAL GOAL: MAXIMIZE RICHNESS WITHIN SAFETY LIMITS]
+        The search engine input box has a strict limit. Your goal is to produce a query **under 1800 bytes (safe margin)**.
         To achieve this:
-        1. **Aggressive Expansion**: Do NOT limit yourself to 2-3 synonyms. List **as many relevant synonyms as possible** (5-10+ per language) for the core concepts.
-        2. **Technical Granularity**: Include specific technical terms, acronyms, chemical formulas, component names, and spelling variations.
-        3. **Language Coverage**: You MUST include English, Traditional Chinese, Simplified Chinese, Japanese, and Korean for ALL key concepts.
-        
-        [BYTE CALCULATION RULE]
-        - English/Numbers: 1 Byte per char.
-        - Chinese/Japanese/Korean: **3 Bytes** per char.
-        - *Strategy*: Since CJK is expensive, prioritize a massive amount of English keywords, followed by a rich selection of CJK terms until the limit is approached.
+        1. **Aggressive Expansion**: List relevant synonyms, technical terms, acronyms, and spelling variations.
+        2. **Language Priority**: 
+        - Tier 1: English (Most density efficient).
+        - Tier 2: Traditional Chinese & Simplified Chinese.
+        - Tier 3: Japanese & Korean (Include only top 3-5 key terms per concept to save space).
+
+        [BYTE CALCULATION & URL ENCODING RULE]
+        LLMs often miscount. Use this heuristic:
+        - English/Numbers: 1 Byte.
+        - **CJK Characters (Chinese/Japanese/Korean)**: count as **9 Bytes** each (to account for %XX%XX%XX URL encoding expansion).
+        - *Strategy*: Since CJK is extremely expensive in URL length, prioritize a massive amount of English keywords. Only add CJK terms if you are sure you have space.
 
         [CRITICAL RULE: SYNTAX INTEGRITY]
         1. **Balanced Parentheses**: Ensure every opening `(` has a matching closing `)`.
@@ -52,7 +55,7 @@ class GeminiClient:
         - Apply `@TI` ONLY.
 
         3. **IPC Classification**:
-        - Include a comprehensive list of relevant IPC/CPC codes (e.g., G06F3/01, G06F3/048...).
+        - Include a comprehensive list of relevant IPC/CPC codes (e.g., G06F3Z*, G06F3*...).
         - Combine with OR.
 
         [Reference Example]

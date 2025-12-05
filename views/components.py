@@ -136,12 +136,12 @@ def render_sidebar():
 
         st.header("🔍 搜尋條件")
 
-        search_mode = st.radio(
+        st.session_state.search_mode = st.radio(
             "選擇搜尋模式",
             ["搜尋布林檢索式", "AI 檢索式推論 (Gemini LLM)"],
         )
         
-        if search_mode == "搜尋布林檢索式":
+        if st.session_state.search_mode == "搜尋布林檢索式":
             st.button("✏️ 點擊編輯檢索式", help="點擊編輯檢索式", key="btn_edit_query", on_click=show_query_editor)
         else:
             st.markdown("""
@@ -165,7 +165,7 @@ def render_sidebar():
             st.markdown("""
             **🧠 AI 全自動分類** 系統將自動閱讀專利摘要並分析功效定義
             """)
-            if not st.session_state.llm_key:
+            if not st.session_state.gemini_api_key:
                 st.warning("請輸入 Key 以啟動 AI 功能")
         
         st.divider()
