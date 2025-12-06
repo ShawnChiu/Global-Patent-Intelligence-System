@@ -46,7 +46,7 @@ def get_result():
     if st.session_state.search_mode == "AI 檢索式推論 (Gemini LLM)":
         with st.spinner("正在生成布林檢索式，請稍候..."):
             st.session_state.query = gemini_client.convert_topic_to_query(st.session_state.topic)
-            setmgr.settings.gemini_api_key = st.session_state.search_model.gemini_api_key
+            setmgr.settings.gemini_api_key = st.session_state.gemini_api_key
             with st.expander("查看布林檢索式", expanded=False):
                 st.text(st.session_state.query)
 
