@@ -33,6 +33,7 @@ def init_session_state():
     st.session_state.setdefault("tech", setmgr.settings.tech_config)
     st.session_state.setdefault("eff", setmgr.settings.effect_config)
     st.session_state.setdefault("conf_source", "")
+    st.session_state.setdefault("matrix", setmgr.settings.matrix)
 
 def detect_state():
     if st.session_state.submitted:

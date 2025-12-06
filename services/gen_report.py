@@ -3,7 +3,7 @@ from docx.shared import Pt, Inches, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from io import BytesIO
-import re
+from services.parser import Parser
 
 class ReportGenrator:
     def __init__(self, topic = "", search_result = [0, 0], query = "", students_data = [], source = ["", ""], matrix_json = [], chart_buffers = {}):        
@@ -12,29 +12,11 @@ class ReportGenrator:
         self.topic = topic
         self.search_result = search_result
         self.query = query
-        self.scope = self.extract_ipc_scope(query)
+        self.scope = Parser.parse_query(query)
         self.students_data = students_data
         self.source = source
         self.matrix_json = matrix_json
         self.chart_buffers = chart_buffers
-
-    def extract_ipc_scope(self, query):
-        """
-        從檢索字串中擷取 IC (IPC/CPC) 範圍，自動去除括號。
-        """
-        # Regex 解析：
-        # 1. \(?       -> 匹配開頭可選的左括號 '('
-        # 2. (IC=[^)]+) -> 【捕獲群組】抓取 IC= 開頭，且內容不包含 ')' 的所有字元
-        # 3. \)?       -> 匹配結尾可選的右括號 ')'
-        pattern = r"\(?(IC=[^)]+)\)?"
-        
-        # 搜尋所有符合的片段 (通常 IPC 設定會在最後面，我們取最後一個匹配的或是特定的)
-        match = re.search(pattern, query)
-        
-        if match:
-            # group(1) 會自動排除掉括號，只回傳中間的內容
-            return match.group(1).strip()
-        return None
 
 
     def gen_report(self):

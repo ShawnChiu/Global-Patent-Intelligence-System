@@ -16,6 +16,7 @@ class UserSettings:
     query: str = config.DEFAULT_QUERY
     name : str = config.DEFAULT_NAME
     student_id : str = config.DEFAULT_STUDENT_ID
+    matrix = config.DEFAULT_MATRIX
 
 class SettingsManager:
     def __init__(self, filepath=SETTINGS_FILE):
