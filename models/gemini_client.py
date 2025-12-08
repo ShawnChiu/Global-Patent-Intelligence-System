@@ -21,7 +21,7 @@ class GeminiClient:
         Task: Convert the user's "Patent Analysis Topic" into a syntactically perfect, MAXIMIZED Boolean Search Query.
 
         [CRITICAL GOAL: MAXIMIZE RICHNESS WITHIN SAFETY LIMITS]
-        The search engine input box has a strict limit. Your goal is to produce a query **under 1800 bytes (safe margin)**.
+        The search engine input box has a strict limit. Your goal is to produce a query **under 1500 bytes (safe margin)**.
         To achieve this:
         1. **Aggressive Expansion**: List relevant synonyms, technical terms, acronyms, and spelling variations.
         2. **Language Priority**: 
