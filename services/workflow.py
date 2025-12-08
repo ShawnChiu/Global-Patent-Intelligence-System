@@ -17,14 +17,20 @@ def get_result():
             else:
                 st.error("尚未輸入 Gemini API")
                 return
-        if st.session_state.search_mode == "搜尋布林檢索式" and not Parser.is_valid_parentheses(st.session_state.query):
+        if st.session_state.search_mode == "搜尋布林檢索式" and (not st.session_state.query or not Parser.is_valid_parentheses(st.session_state.query)):
             st.error("非法布林檢索式")
             return
         if st.session_state.matrix_mode == "關鍵字規則 (Rule-based)":
+            if not st.session_state.matrix.get("technologies"):
+                st.error(f"非法技術布林式")
+                return   
             for i, tech in enumerate(st.session_state.matrix["technologies"]):
                 if not Parser.is_valid_parentheses(tech["boolean"]):
                     st.error(f"非法技術布林式：{i+1}")
                     return
+            if not st.session_state.matrix.get("efficacies"):
+                st.error(f"非法功效布林式")
+                return 
             for i, eff in enumerate(st.session_state.matrix["efficacies"]):
                 if not Parser.is_valid_parentheses(eff["boolean"]):
                     st.error(f"非法功效布林式：{i+1}")
