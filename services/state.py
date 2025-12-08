@@ -30,8 +30,6 @@ def init_session_state():
     # 5. 初始化那些會在 render 過程中產生，但尚未存在的變數
     st.session_state.setdefault("query", setmgr.settings.query)
     st.session_state.setdefault("source", "")
-    st.session_state.setdefault("tech", setmgr.settings.tech_config)
-    st.session_state.setdefault("eff", setmgr.settings.effect_config)
     st.session_state.setdefault("conf_source", "")
     st.session_state.setdefault("matrix", setmgr.settings.matrix)
 
