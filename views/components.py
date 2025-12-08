@@ -42,7 +42,7 @@ def show_matrix_editor():
         unsafe_allow_html=True
     )
     # 設定 width="large" 讓視窗變寬，適合左右並排
-    st.write("請在下方分別定義 X 軸與 Y 軸的關鍵字：")
+    st.write("請在下方分別定義技術與功效的關鍵字：")
     col1 ,col2 = st.columns([1, 1])
     with col1:
         st.header("技術分析")
@@ -316,7 +316,37 @@ def render_results():
         </style>
         """, unsafe_allow_html=True)
         st.subheader("🏷️ 矩陣分析關鍵字")      
-        st.code(st.session_state.results.get("matrix_data"), language=None)  
+        col1 ,col2 = st.columns([1, 1])
+        with col1:
+            st.header("技術分析")
+            for tech in st.session_state.matrix.get("technologies", []):
+                c1, c2 = st.columns([1, 3]) # 設定左右寬度比例
+                with c1:
+                    st.code(
+                        tech.get("label", ""),
+                        language=None
+                    )
+                    
+                with c2:
+                    st.code(
+                        tech.get("boolean", ""),
+                        language=None
+                    )
+        with col2:
+            st.header("功效分析")
+            for eff in st.session_state.matrix.get("efficacies", []):
+                c1, c2 = st.columns([1, 3]) # 設定左右寬度比例
+                with c1:
+                    st.code(
+                        eff.get("label", ""),
+                        language=None
+                    )
+                    
+                with c2:
+                    st.code(
+                        eff.get("boolean", ""),
+                        language=None
+                    )
 
     with tab7:
         st.subheader("💡 技術功效矩陣")

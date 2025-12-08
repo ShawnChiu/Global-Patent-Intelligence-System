@@ -232,7 +232,6 @@ class Parser :
         # 這裡是最需要修改的地方，以支援 Buffer
         matrix_file = diagram_buffers.get("matrix")
 
-        return fig_buffers, img_buffers
         
         if matrix_file:
             try:
@@ -307,8 +306,7 @@ class Parser :
             except Exception as e:
                 st.error(f"矩陣解析錯誤: {str(e)}")
 
-        st.session_state.results["fig"] = fig_buffers
-        st.session_state.results["img"] = img_buffers
+        return fig_buffers, img_buffers
 
     
     @staticmethod
