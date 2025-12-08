@@ -3,8 +3,23 @@ import json
 import os
 from dataclasses import dataclass, asdict
 import config
+import sys
 
-SETTINGS_FILE = ".data/user_settings.json"
+def get_app_path():
+    """
+    取得程式執行的真實路徑。
+    - 打包後：回傳 .exe 所在的資料夾
+    - 開發時：回傳 .py 腳本所在的資料夾
+    """
+    if getattr(sys, 'frozen', False):
+        # PyInstaller 打包後的執行檔路徑
+        return os.path.dirname(sys.executable)
+    else:
+        # 開發模式下的腳本路徑
+        return os.path.dirname(os.path.abspath(__file__))
+
+SETTINGS_FILE = os.path.join(get_app_path(), ".data", "user_settings.json")
+
 
 @dataclass
 class UserSettings:

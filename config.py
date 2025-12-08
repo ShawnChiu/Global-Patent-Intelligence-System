@@ -21,3 +21,5 @@ DEFAULT_EFFECT_CONFIG = """FOV: (fov OR field OR view OR 視場 OR 廣角)
 VID: (vid OR distance OR depth, OR 虛像距離)
 3D: (3d OR stereoscopic OR 立體)
 Image Quality: (resolution OR contrast OR 清晰 OR 畫質)"""
+
+EXAMPLE_CONFIG = {}

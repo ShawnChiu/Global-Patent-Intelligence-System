@@ -10,7 +10,10 @@ class GPSSClient:
     
     def __init__(self):
         self.p = sync_playwright().start()
-        self.browser = self.p.chromium.launch(headless=False)
+        self.browser = self.p.chromium.launch(
+            headless=False,
+            channel="chrome"  # 或者用 "msedge"
+        )
         self.context = self.browser.new_context()
         self.search_page = self.context.new_page()
 
