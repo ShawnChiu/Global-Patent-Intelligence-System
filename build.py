@@ -83,6 +83,7 @@ pyinstaller_args = [
     f'--add-data=.data;.data',
     f'--add-data=config.py;.',
     '--add-data=main.py;.',
+    '--icon=卷.png',
 ]
 
 # 2. 自動把 extra_folders 加入參數
