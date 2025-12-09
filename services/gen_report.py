@@ -63,8 +63,7 @@ class ReportGenrator:
 
         # --- 3. 檢索流程 ---
         # 
-        h1 = doc.add_heading(level=1)
-        set_chinese_font(h1.add_run('檢索流程'), size=16, bold=True)
+        doc.add_heading('一、檢索流程', level=1)
 
         # 選定主題
         p = doc.add_paragraph()
@@ -105,6 +104,7 @@ class ReportGenrator:
         set_chinese_font(p.add_run("除了關鍵詞與國際分類號，檢索條件仍採取and or not等控制條件。"))
 
         doc.add_page_break()
+        doc.add_heading('二、專利管理圖分析', level=1)
         doc.add_heading("技術領域分類分析", level=2)
         buffer = self.chart_buffers.get("ipc")
         if buffer:
@@ -149,8 +149,8 @@ class ReportGenrator:
 
         # --- 5. 技術與功效分類表 ---
         # 技術分類表格
-        doc.add_heading('專利技術圖分析 - 技術分類', level=2)
-        
+        doc.add_heading('三、專利技術圖分析', level=1)
+        doc.add_heading('技術分類', level=2)
         tech_data = self.matrix_json["technologies"]
         
         table = doc.add_table(rows=len(tech_data) + 1, cols=2)
@@ -201,8 +201,7 @@ class ReportGenrator:
             p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
             set_chinese_font(p.add_run(f"資料來源：{self.source[1]}"))
         # --- 6. 技術功效矩陣分析 ---
-        # 
-        doc.add_heading('三、技術功效矩陣分析', level=1)
+        doc.add_heading('技術功效矩陣圖', level=2)
         buffer = self.chart_buffers.get("matrix")
         if buffer:
                 buffer.seek(0)

@@ -76,7 +76,7 @@ EXAMPLE_CONFIG = {
             ]
         }
     },
-    "Immunocytokine 產業專利分析與布局": {
+    "Immunocytokine 產業": {
         "main_boolean": "(((((\"Antibody Drug Conjugate\") OR (ADC) OR (ADCs) OR (抗體藥物複合體) OR (抗體藥物偶聯物) OR (抗體—藥物複合物) OR (Immunoconjugates) OR (免疫結合物) OR (Immunocytokine) OR (免疫細胞因子)) AND ((\"Monoclonal Antibodies\") OR (mAb) OR (mAbs) OR (單株抗體) OR (cytokine) OR (細胞激素) OR (細胞因子) OR (細胞介素) OR (細胞活素) OR (細胞素))@CL,TI,AB AND ((Chemotherapy) OR (Chemo) OR (化學藥物治療) OR (化療) OR (Cancer) OR (癌症) OR (\"Autoimmune Disease\") OR (自體免疫性疾病) OR (\"Immunosuppressive drugs\") OR (\"Immunosuppressive agents\") OR (免疫抑制劑) OR (\"chimeric antigen receptor T cell\") OR (CAR-T) OR (嵌合抗原受體重組 T 細胞) OR (\"chimeric antigen receptor NK cell\") OR (CARNK) OR (嵌合抗原受體自然殺手細胞))@CL,TI,AB AND (IC=A61K-039/00* OR IC=A61K-047/50* OR IC=A61P-035/00* OR IC=A61P-037/00* OR IC=C07K-016/00* OR IC=C07K-014/52* OR IC=C07K-016/28) NOT ((\"DIAGNOSTIC AGENTS\") OR (診斷劑) OR (\"BACTERIAL MEMBRANE PREPARATIONS\") OR (細菌膜製劑) OR (\"BACTERIAL STRAINS\") OR (BACTERIA) OR (細菌) OR (\"BACTERIA-BASED VACCINES\") OR (VACCINE) OR (疫苗) OR (\"Ligand Drug Conjugates\") OR (配體藥物結合物) OR (RADIOIMMUNOTHERAPY) OR (\"CELL CRYOPRESERVATION\") OR (細胞冷凍保存培養基) OR (\"TREATMENT METHOD\") OR (治療方法) OR (配體) OR (Ligand))@TI) AND (IC=A* OR IC=C*) AND (IU=//[01:化學工業] OR IU=//[02:生技醫藥業])))",
         "matrix": {
             "technologies": [

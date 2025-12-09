@@ -128,7 +128,7 @@ class Parser :
                 df_plot = df_plot.dropna(subset=['Count']).sort_values('Count', ascending=True).tail(15)
                 
                 if not df_plot.empty:
-                    fig = px.bar(df_plot, x='Count', y='Name', orientation='h', title="專利權人排名 (Top 15)", 
+                    fig = px.bar(df_plot, x='Count', y='Name', orientation='h', title="專利權人排名 (Top 15).", 
                                     text='Count', color='Count', color_continuous_scale='Blues')
                     fig_buffers["assignee"] = fig
                 try:
