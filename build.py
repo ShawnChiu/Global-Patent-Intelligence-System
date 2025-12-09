@@ -71,7 +71,7 @@ extra_folders = [
 ]
 
 pyinstaller_args = [
-    'run_app.py',
+    'run.py',
     '--onefile',
     '--clean',
     '--copy-metadata=streamlit',

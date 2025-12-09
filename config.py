@@ -1,7 +1,7 @@
 # 檔案位置：config.py (在專案根目錄，與 main.py 同層)
 
-DEFAULT_NAME ="Good Leader 👍"
-DEFAULT_STUDENT_ID = "B113150"
+DEFAULT_NAME ="USER"
+DEFAULT_STUDENT_ID = "B11315000"
 
 # API 設定
 DEFAULT_GEMINI_API_KEY = ""
@@ -72,6 +72,55 @@ EXAMPLE_CONFIG = {
                 {
                     "label": "增加視覺焦點平面(Focal)",
                     "boolean": "(\"Double-focal\" OR \"Multi focal\" OR\"Dual-focal\" OR \"two or more focal\" OR 多焦 OR 雙焦 OR planes OR planar OR 平面)@TI,AB,CL,DE"
+                }
+            ]
+        }
+    },
+    "Immunocytokine 產業專利分析與布局": {
+        "main_boolean": "(((((\"Antibody Drug Conjugate\") OR (ADC) OR (ADCs) OR (抗體藥物複合體) OR (抗體藥物偶聯物) OR (抗體—藥物複合物) OR (Immunoconjugates) OR (免疫結合物) OR (Immunocytokine) OR (免疫細胞因子)) AND ((\"Monoclonal Antibodies\") OR (mAb) OR (mAbs) OR (單株抗體) OR (cytokine) OR (細胞激素) OR (細胞因子) OR (細胞介素) OR (細胞活素) OR (細胞素))@CL,TI,AB AND ((Chemotherapy) OR (Chemo) OR (化學藥物治療) OR (化療) OR (Cancer) OR (癌症) OR (\"Autoimmune Disease\") OR (自體免疫性疾病) OR (\"Immunosuppressive drugs\") OR (\"Immunosuppressive agents\") OR (免疫抑制劑) OR (\"chimeric antigen receptor T cell\") OR (CAR-T) OR (嵌合抗原受體重組 T 細胞) OR (\"chimeric antigen receptor NK cell\") OR (CARNK) OR (嵌合抗原受體自然殺手細胞))@CL,TI,AB AND (IC=A61K-039/00* OR IC=A61K-047/50* OR IC=A61P-035/00* OR IC=A61P-037/00* OR IC=C07K-016/00* OR IC=C07K-014/52* OR IC=C07K-016/28) NOT ((\"DIAGNOSTIC AGENTS\") OR (診斷劑) OR (\"BACTERIAL MEMBRANE PREPARATIONS\") OR (細菌膜製劑) OR (\"BACTERIAL STRAINS\") OR (BACTERIA) OR (細菌) OR (\"BACTERIA-BASED VACCINES\") OR (VACCINE) OR (疫苗) OR (\"Ligand Drug Conjugates\") OR (配體藥物結合物) OR (RADIOIMMUNOTHERAPY) OR (\"CELL CRYOPRESERVATION\") OR (細胞冷凍保存培養基) OR (\"TREATMENT METHOD\") OR (治療方法) OR (配體) OR (Ligand))@TI) AND (IC=A* OR IC=C*) AND (IU=//[01:化學工業] OR IU=//[02:生技醫藥業])))",
+        "matrix": {
+            "technologies": [
+                {
+                    "label": "CAR-T cells",
+                    "boolean": "靶向治療 OR \"Targeted therapy\" OR 免疫療法 OR \"Immunotherapy\" OR 抗原特異性 OR \"Antigen specificity\" OR 抗體結合 OR \"Antibody binding\" OR 腫瘤細胞殺傷 OR \"Tumor cell killing\" OR 抗體依賴性細胞毒性 OR \"Antibody-dependent cellular cytotoxicity\" OR ADCC OR 細胞內毒素釋放 OR \"Intracellular toxin release\" OR 癌症治療 OR \"Cancer treatment\" OR 腫瘤微環境 OR \"Tumor microenvironment\" OR 抗體修飾 OR \"Antibody modification\" OR 嵌合抗原受體 OR \"Chimeric antigen receptor\" OR T細胞活化 OR \"T cell activation\" OR 靶向抗原 OR \"Target antigen\" OR 腫瘤抗原 OR \"Tumor antigen\" OR 細胞療法 OR \"Cell therapy\" OR 基因工程 OR \"Genetic engineering\" OR 免疫逃逸 OR \"Immune evasion\" OR 腫瘤免疫 OR \"Tumor immunity\" OR 靶向傳遞 OR \"Targeted delivery\""
+                },
+                {
+                    "label": "Gene-modified dendritic cells",
+                    "boolean": "基因修飾 OR \"Gene modification\" OR 樹突狀細胞 OR \"Dendritic cells\" OR 抗原呈遞 OR \"Antigen presentation\" OR 免疫激活 OR \"Immune activation\" OR 癌症免疫療法 OR \"Cancer immunotherapy\" OR 基因工程 OR \"Genetic engineering\" OR 腫瘤免疫反應 OR \"Tumor immune response\" OR T 細胞活化 OR \"T cell activation\" OR 細胞因子釋放 OR \"Cytokine release\" OR 免疫調節 OR \"Immune modulation\" OR 腫瘤抗原 OR \"Tumor antigens\" OR 個性化癌症疫苗 OR \"Personalized cancer vaccines\" OR 免疫記憶 OR \"Immune memory\" OR 抗原特異性免疫反應 OR \"Antigen-specific immune response\" OR 免疫監控 OR \"Immune surveillance\" OR 細胞療法 OR \"Cell therapy\" OR 基因轉染 OR \"Gene transfection\" OR 免疫耐受 OR \"Immune tolerance\""
+                },
+                {
+                    "label": "Gene therapy for immune cells",
+                    "boolean": "基因治療 OR \"Gene therapy\" OR 免疫細胞 OR \"Immune cells\" OR T 細胞 OR \"T cells\" OR B 細胞 OR \"B cells\" OR NK 細胞 OR \"NK cells\" OR CAR-T 細胞療法 OR \"CAR-T cell therapy\" OR 基因編輯 OR \"Gene editing\" OR CRISPR OR Cas9 技術 OR CRISPR OR \"Cas9 technology\" OR 基因轉染 OR \"Gene transfection\" OR 基因修飾 OR \"Gene modification\" OR 免疫系統增強 OR \"Immune system enhancement\" OR 抗癌免疫療法 OR \"Anti-cancer immunotherapy\" OR 靶向治療 OR \"Targeted therapy\" OR 免疫調節 OR \"Immune modulation\" OR 腫瘤免疫反應 OR \"Tumor immune response\" OR 基因載體 OR \"Gene vectors\" OR 基因插入 OR \"Gene insertion\" OR 細胞療法 OR \"Cell therapy\" OR 免疫逃逸 OR \"Immune evasion\""
+                },
+                {
+                    "label": "Modified natural killer (NK) cells",
+                    "boolean": "改造自然殺手細胞 OR 嵌合抗原受體自然殺手細胞 OR 免疫療法 OR 癌症治療 OR 細胞毒性 OR 細胞因子 OR 採納性細胞轉移 OR 腫瘤微環境 OR 免疫調節 OR 同種異體 NK 細胞 OR NK 細胞擴增 OR 靶向療法 OR基因工程 NK 細胞 OR 免疫逃逸 OR 臨床試驗 OR 腫瘤溶解病毒、Modified NK cells OR CAR-NK cells OR Immune therapy OR Cancer treatment OR Cytotoxicity OR Cytokines OR Adoptive cell transfer OR Tumor microenvironment OR Immune modulation OR Allogeneic NK cells OR NK cell expansion OR Targeted therapy OR Genetically engineered NK cells OR Immune escape OR Clinical trials OR Oncolytic viruses"
+                },
+                {
+                    "label": "Gene-edited T cells",
+                    "boolean": "基因編輯 T 細胞 OR 嵌合抗原受體 T 細胞 OR 免疫療法 OR 癌症治療 OR 細胞療法 OR CRISPR 技術 OR T 細胞擴增 OR 自體 T 細胞 OR 同種異體細胞 OR 免疫逃逸 OR 免疫監視 OR 臨床試驗 OR 轉基因技術 OR T 細胞功能增強 OR 腫瘤微環境 OR 免疫調節 OR Gene-edited T cells OR CAR T cells OR Immune therapy OR Cancer treatment OR Cell therapy OR CRISPR technology OR T cell expansion OR Autologous T cells OR Allogeneic cells OR Immune escape OR Immune surveillance OR Clinical trials OR Gene modification OR T cell enhancement OR Tumor microenvironment OR Immune modulation"
+                }
+            ],
+            "efficacies": [
+                {
+                    "label": "T cell Immunity",
+                    "boolean": "T 細胞毒性 OR enhance T cell OR activate T cells OR expand T cells OR activate particular T cell subsets and expand particular T cell subsets OR 特異性 T 細胞反應 OR tumor-specific T cell OR T 細胞免疫 OR T 細胞活化 OR 細胞介導免疫 OR T 細胞功能 OR T 細胞增殖 OR 免疫監視 OR 免疫記憶 OR 免疫逃逸 OR T cell immunity OR T cell activation OR cell-mediated immunity OR T cell function OR T cell proliferation OR immune surveillance OR immune memory OR immune evasion"
+                },
+                {
+                    "label": "CDC",
+                    "boolean": "補體依賴性細胞毒性 OR 補體系統 OR 抗體介導的細胞毒性 OR 免疫複合物 OR 補體激活 OR 細胞溶解 OR 腫瘤細胞殺傷 OR 免疫反應 OR complementdependent cytotoxicity (CDC) OR complement system OR antibody-mediated cytotoxicity OR immune complexes OR complement activation OR cell lysis OR tumor cell killing OR immune response"
+                },
+                {
+                    "label": "ADCC",
+                    "boolean": "抗體依賴性細胞介導的細胞毒性 OR 增強 ADCC 效應物 OR enhancing ADCC effectors OR NK cells OR macrophages OR 巨噬細胞 OR 腫瘤巨噬細胞 OR tumor macrophages OR 抗體依賴性細胞毒性 OR ADCC OR 效應細胞 OR 細胞介導的免疫反應 OR 腫瘤細胞殺傷 OR 抗體效能 OR 免疫療法 OR 淋巴細胞 OR antibody-dependent cell-mediated cytotoxicity (ADCC) OR ADCC OR effector cells OR cell-mediated immune response OR tumor cell killing OR antibody efficacy OR immunotherapy OR lymphocytes"
+                },
+                {
+                    "label": "Maturation of Antigen Presenting Cells",
+                    "boolean": "抗原呈遞細胞成熟 OR 樹突細胞 OR 抗原呈遞 OR 免疫激活 OR 細胞成熟 OR 免疫反應 OR 免疫調節 OR 細胞因子 OR maturation of antigen presenting cells OR dendritic cells OR antigen presentation OR immune activation OR cell maturation OR immune response OR immune modulation OR cytokines"
+                },
+                {
+                    "label": "Angiogenesis",
+                    "boolean": "Inhibition of Angiogenesis OR 抑制血管新生 OR 血管生成 OR 腫瘤血管生成 OR 血管新生 OR 血管生成 因子 OR 內皮細胞 OR 微血管生成 OR 血流供應 OR 腫瘤微環境 OR angiogenesis OR tumor angiogenesis OR vascular sprouting OR angiogenic factors OR endothelial cells OR microvascular generation OR blood supply OR tumor microenvironment"
                 }
             ]
         }
