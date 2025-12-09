@@ -31,6 +31,10 @@ class GPSSClient:
         self.context.close()
         self.browser.close()
         self.p.stop()
+    def close(self):
+        self.context.close()
+        self.browser.close()
+        self.p.stop()
 
     def download_data(self, name, trigger, page):
         with page.expect_download(timeout = 0) as download_info:

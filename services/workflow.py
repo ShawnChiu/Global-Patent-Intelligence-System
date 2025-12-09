@@ -43,7 +43,7 @@ def get_results():
         gpss_client = GPSSClient()
         if not gpss_client.login(st.session_state.gpss_id, st.session_state.gpss_pw):
             st.error("登入失敗：請確認帳號密碼是否正確或是再試一次")
-            gpss_client = None  # 釋放資源
+            gpss_client.close()  # 釋放資源
             return
         else:
             setmgr.settings.gpss_id = st.session_state.gpss_id
@@ -96,7 +96,7 @@ def get_results():
         st.session_state.results["matrix"] = st.session_state.matrix
         setmgr.settings.matrix = st.session_state.matrix
         st.success("矩陣分析完成！")
-
+    gpss_client.close()  # 釋放資源
 
     render_success_place = st.empty()
     report_success_place = st.empty()
@@ -124,8 +124,7 @@ def get_results():
                 
         except Exception as e:
             st.error(f"報告生成失敗: {str(e)}")
-        gpss_client = None  # 釋放資源
-        setmgr.save()
+    setmgr.save()
 
 def set_example(topic):
     st.session_state.topic = topic
