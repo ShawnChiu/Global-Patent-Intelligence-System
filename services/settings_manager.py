@@ -5,20 +5,27 @@ from dataclasses import dataclass, asdict
 import config
 import sys
 
-def get_app_path():
+def get_project_root():
     """
-    取得程式執行的真實路徑。
-    - 打包後：回傳 .exe 所在的資料夾
-    - 開發時：回傳 .py 腳本所在的資料夾
+    智慧判斷專案根目錄：
+    1. 打包後 (.exe)：回傳 exe 所在的資料夾 (視為根目錄)。
+    2. 開發時 (.py)：因為腳本在 services 內，所以回傳腳本的「上一層」資料夾。
     """
     if getattr(sys, 'frozen', False):
-        # PyInstaller 打包後的執行檔路徑
+        # --- 打包模式 (Frozen) ---
+        # sys.executable 是 .exe 的完整路徑
+        # dirname(sys.executable) 就是 .exe 所在的資料夾
         return os.path.dirname(sys.executable)
     else:
-        # 開發模式下的腳本路徑
-        return os.path.dirname(os.path.abspath(__file__))
+        # --- 開發模式 (Development) ---
+        # __file__ 是 settings_manager.py 的路徑 (.../services/settings_manager.py)
+        # 第一個 dirname 拿到 .../services
+        # 第二個 dirname 拿到 .../ (即根目錄)
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        return os.path.dirname(base_path)
 
-SETTINGS_FILE = os.path.join(get_app_path(), ".data", "user_settings.json")
+# 設定檔案路徑
+SETTINGS_FILE = os.path.join(get_project_root(), ".data", "user_settings.json")
 
 
 @dataclass
@@ -60,11 +67,6 @@ class SettingsManager:
         except Exception as e:
             print(f"儲存失敗: {e}")
 
-    def update_credentials(self, user_id, user_pw):
-        """提供一個方便的方法讓外部呼叫"""
-        self.settings.user_id = user_id
-        self.settings.user_pw = user_pw
-        self.save()
 
 # ==========================================
 # 【關鍵】：在這裡直接實例化

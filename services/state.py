@@ -1,6 +1,5 @@
 import streamlit as st
 from services.settings_manager import setmgr
-from services.workflow import get_result
 
 
 def init_session_state():
@@ -11,8 +10,6 @@ def init_session_state():
     # 1. 初始化結果容器 (最重要)
     st.session_state.setdefault("results", {})
 
-    # 2. 初始化按鈕狀態
-    st.session_state.setdefault("submitted", False)
 
     # 3. 初始化輸入欄位預設值 (從 settings 讀取)
     # 使用 setdefault 是更簡潔的寫法，等同於 if key not in ... then set ...
@@ -32,7 +29,3 @@ def init_session_state():
     st.session_state.setdefault("source", "")
     st.session_state.setdefault("conf_source", "")
     st.session_state.setdefault("matrix", setmgr.settings.matrix)
-
-def detect_state():
-    if st.session_state.submitted:
-        get_result()

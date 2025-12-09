@@ -6,7 +6,7 @@ from services.parser import Parser
 from services.gen_report import ReportGenrator
 from config import EXAMPLE_CONFIG
 
-def get_result():
+def get_results():
     st.session_state.results = {}
     with st.spinner("正在分析輸入 ..."):
         if st.session_state.topic_select != "自訂":
@@ -94,8 +94,6 @@ def get_result():
         gpss_client.fill_matrix_form(st.session_state.matrix)
         st.session_state.results["matrix"] = st.session_state.matrix
         st.success("矩陣分析完成！")
-
-    gpss_client.close()
 
 
     render_success_place = st.empty()

@@ -1,6 +1,7 @@
 # 檔案位置：views/components.py
 import streamlit as st
 import pandas as pd
+from services.workflow import get_results
 from config import EXAMPLE_CONFIG
 
 
@@ -178,7 +179,7 @@ def render_sidebar():
         )
         if st.session_state.topic_select != "自訂" :
             st.divider()
-            st.session_state.submitted = st.button("🚀 開始分析", type="primary")
+            st.button("🚀 開始分析", type="primary", on_click=get_results)
             return
 
         st.session_state.topic = st.text_input("輸入技術主題", value="", type="default", placeholder="輸入你的專利技術主題")
@@ -237,7 +238,7 @@ def render_sidebar():
             )
 
         st.divider()
-        st.session_state.submitted = st.button("🚀 開始分析", type="primary")
+        st.button("🚀 開始分析", type="primary", on_click=get_results)
 
 def render_results():
     if not st.session_state.results:

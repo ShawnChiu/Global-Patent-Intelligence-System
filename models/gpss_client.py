@@ -185,7 +185,7 @@ class GPSSClient:
 
         page.close()
 
-    def close(self):
+    def __del__(self):
         self.context.close()
         self.browser.close()
         self.p.stop()

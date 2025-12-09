@@ -80,10 +80,8 @@ pyinstaller_args = [
     '--hidden-import=docx',
     '--hidden-import=playwright.sync_api',  # 既然都手動了，這幾個也建議手動加保險
     '--hidden-import=google.generativeai',
-    f'--add-data=.data;.data',
     f'--add-data=config.py;.',
     '--add-data=main.py;.',
-    '--icon=卷.png',
 ]
 
 # 2. 自動把 extra_folders 加入參數
