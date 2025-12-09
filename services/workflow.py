@@ -94,6 +94,7 @@ def get_results():
     with st.spinner("正在進行矩陣分析"):
         gpss_client.fill_matrix_form(st.session_state.matrix)
         st.session_state.results["matrix"] = st.session_state.matrix
+        setmgr.settings.matrix = st.session_state.matrix
         st.success("矩陣分析完成！")
 
 

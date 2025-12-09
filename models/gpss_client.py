@@ -27,6 +27,11 @@ class GPSSClient:
         self.dedup_result = None
         self.diagram_buffers = {}
 
+    def __del__(self):
+        self.context.close()
+        self.browser.close()
+        self.p.stop()
+
     def download_data(self, name, trigger, page):
         with page.expect_download(timeout = 0) as download_info:
             trigger.click(timeout = 0)
@@ -184,8 +189,3 @@ class GPSSClient:
         self.download_data("matrix", page.locator("input[title='Export']"), page)
 
         page.close()
-
-    def __del__(self):
-        self.context.close()
-        self.browser.close()
-        self.p.stop()

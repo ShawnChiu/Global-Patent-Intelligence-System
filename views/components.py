@@ -50,7 +50,6 @@ def show_matrix_editor():
         tech = []
         for i in range(6):
             c1, c2 = st.columns([1, 3]) # 設定左右寬度比例
-            
             with c1:
                 # 左邊：短的輸入框
                 label = st.text_input(
