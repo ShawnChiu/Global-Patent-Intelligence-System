@@ -126,9 +126,9 @@ python build.py
 
 ## 👨‍💻 開發成員 (Contributors)
 
-| 學號 (Student ID) |
-| :---: |
-| **B11315053** | 
-| **B11315059** | 
-| **B11330043** |
+| 學號 (Student ID) | GitHub |
+| :---: | :---: |
+| **B11315053** | [@Paidaxin0226](https://github.com/Paidaxin0226) |
+| **B11315059** | [@ShawnChiu](https://github.com/ShawnChiu) |
+| **B11330043** | [@yomiyumy](https://github.com/yomiyumy) |
 
