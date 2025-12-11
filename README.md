@@ -36,30 +36,11 @@
 
 ### 2\. 安裝依賴套件
 
-請確保目錄下有 `requirements.txt` (依據你的 import 推斷，建議內容如下)，然後執行：
+請確保目錄下有 `requirements.txt` ，然後執行：
 
 ```bash
 pip install -r requirements.txt
 ```
-
-> **建議的 `requirements.txt` 內容：**
->
-> ```text
-> streamlit
-> playwright
-> google-generativeai
-> pandas
-> plotly
-> python-docx
-> easyocr
-> pillow
-> nest_asyncio
-> kaleido==0.2.1  # 用於圖表輸出圖片
-> pyinstaller
-> numpy
-> openpyxl
-> lxml
-> ```
 
 ### 3\. 安裝 Playwright 瀏覽器核心
 
