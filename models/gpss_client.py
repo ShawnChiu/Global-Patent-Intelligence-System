@@ -78,7 +78,7 @@ class GPSSClient:
             page.locator("input[name='sys/00/rand']").fill(auth)
             page.locator("input[value='登入/Login']").click()
             page.wait_for_load_state("networkidle")
-            if page.get_by_text("登出", exact=True).is_visible():
+            if not page.get_by_text("登入/Login", exact=True).is_visible():
                 self.home_url = "https://tiponet.tipo.gov.tw" + page.locator(".navbar-header > a").get_attribute("href")
                 page.close()
                 return True
