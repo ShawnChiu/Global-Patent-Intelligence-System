@@ -66,9 +66,6 @@ class GPSSClient:
         page.goto(self.login_url)
         page.wait_for_load_state()
         for _ in range(10):
-            if not page.locator("input[name='email']").is_visible() and not page.locator("input[type='PASSWORD']").is_visible():
-                self.home_url = "https://tiponet.tipo.gov.tw" + page.locator(".navbar-header > a").get_attribute("href")
-                return True
             page.locator("input[name='email']").fill(account)
             page.locator("input[type='PASSWORD']").fill(password)
 
@@ -81,7 +78,12 @@ class GPSSClient:
             page.locator("input[name='sys/00/rand']").fill(auth)
             page.locator("input[value='登入/Login']").click()
             page.wait_for_load_state("networkidle")
-            if not page.get_by_text("登入/Login", exact=True).is_visible() or page.get_by_text("登出", exact=True).is_visible:
+
+            login_btn_gone = not page.get_by_text("登入/Login", exact=True).is_visible()
+            logout_btn_visible = page.get_by_text("登出", exact=True).is_visible()
+            email_box_gone = not page.get_by_text("信箱 / Email", exact=True).is_visible()
+            password_box_gone = not page.get_by_text("密碼 / Password", exact=True).is_visible()
+            if login_btn_gone or logout_btn_visible or email_box_gone or password_box_gone:
                 self.home_url = "https://tiponet.tipo.gov.tw" + page.locator(".navbar-header > a").get_attribute("href")
                 page.close()
                 return True
