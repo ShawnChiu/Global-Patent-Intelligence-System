@@ -131,7 +131,7 @@ class ReportGenrator:
             doc.add_paragraph("[無 IPC 圖表數據]")
 
         doc.add_heading("專利申請趨勢", level=2)
-        buffer = self.chart_buffers.get("ipc")
+        buffer = self.chart_buffers.get("trend_range")
         if buffer:
             buffer.seek(0)
             doc.add_picture(buffer, width=Inches(5))
