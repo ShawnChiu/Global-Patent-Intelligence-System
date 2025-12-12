@@ -66,6 +66,9 @@ class GPSSClient:
         page.goto(self.login_url)
         page.wait_for_load_state()
         for _ in range(10):
+            if not page.locator("input[name='email']").is_visible() and not page.locator("input[type='PASSWORD']").is_visible():
+                self.home_url = "https://tiponet.tipo.gov.tw" + page.locator(".navbar-header > a").get_attribute("href")
+                return True
             page.locator("input[name='email']").fill(account)
             page.locator("input[type='PASSWORD']").fill(password)
 
