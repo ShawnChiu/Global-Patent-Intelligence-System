@@ -41,7 +41,7 @@ def get_results():
     # 2. 初始化客戶端 (Model)
     with st.spinner("正在登入GPSS ..."):
         gpss_client = GPSSClient()
-        if not gpss_client.login(st.session_state.gpss_id, st.session_state.gpss_pw):
+        if not gpss_client.login(st.session_state.gpss_id, st.session_state.gpss_pw, st.session_state.login_mode != "手動輸入驗證碼"):
             st.error("登入失敗：請確認帳號密碼是否正確或是再試一次")
             gpss_client.close()  # 釋放資源
             return

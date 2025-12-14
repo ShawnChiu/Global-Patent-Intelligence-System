@@ -158,6 +158,12 @@ def show_basic_info():
     st.header("🌸 GPSS 帳號密碼")
     st.session_state.gpss_id = st.text_input("GPSS 使用者代碼", value=st.session_state.gpss_id, type="default", placeholder="輸入你的 GPSS 使用者代碼")
     st.session_state.gpss_pw = st.text_input("GPSS 密碼", value=st.session_state.gpss_pw, type="password", placeholder="輸入你的 GPSS 密碼")   
+    st.header("🔐 登入模式")
+    st.session_state.login_mode = st.radio(
+        "選擇登入模式",
+        ["手動輸入驗證碼", "自動辨識驗證碼"],
+        captions=["", "快速但不穩定"]
+    )
 
     if st.button("💾 儲存並關閉", type="primary", use_container_width=True):
         st.rerun()

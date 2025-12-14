@@ -21,6 +21,7 @@ def init_session_state():
     st.session_state.setdefault("student_id", setmgr.settings.student_id)
 
     # 4. 初始化複雜邏輯變數
+    st.session_state.setdefault("login_mode", "手動輸入驗證碼")
     st.session_state.setdefault("search_mode", "搜尋布林檢索式")
     st.session_state.setdefault("matrix_mode", "關鍵字規則 (Rule-based)")
     
