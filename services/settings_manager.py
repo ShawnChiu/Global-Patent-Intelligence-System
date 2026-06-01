@@ -35,6 +35,9 @@ class UserSettings:
     tech_config: str = config.DEFAULT_TECH_CONFIG
     effect_config: str = config.DEFAULT_EFFECT_CONFIG
     gemini_api_key: str = config.DEFAULT_GEMINI_API_KEY
+    llm_provider: str = config.DEFAULT_LLM_PROVIDER
+    llm_model: str = config.DEFAULT_LLM_MODEL
+    llm_base_url: str = config.DEFAULT_LLM_BASE_URL
     query: str = config.DEFAULT_QUERY
     name : str = config.DEFAULT_NAME
     student_id : str = config.DEFAULT_STUDENT_ID

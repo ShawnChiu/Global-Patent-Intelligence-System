@@ -33,6 +33,9 @@ class AnalyzeRequest(BaseModel):
     gpss_id: str = ""
     gpss_pw: str = ""
     gemini_api_key: str = ""
+    llm_provider: str = "gemini"
+    llm_model: str = "gemini-2.5-flash"
+    llm_base_url: str = "https://api.openai.com/v1"
     login_mode: str = "自動辨識驗證碼"
     search_mode: str = "搜尋布林檢索式"
     matrix_mode: str = "關鍵字規則 (Rule-based)"
@@ -48,6 +51,9 @@ def _default_state():
         "gpss_id": setmgr.settings.gpss_id,
         "gpss_pw": setmgr.settings.gpss_pw,
         "gemini_api_key": setmgr.settings.gemini_api_key,
+        "llm_provider": setmgr.settings.llm_provider,
+        "llm_model": setmgr.settings.llm_model,
+        "llm_base_url": setmgr.settings.llm_base_url,
         "login_mode": "自動辨識驗證碼",
         "search_mode": "搜尋布林檢索式",
         "matrix_mode": "關鍵字規則 (Rule-based)",

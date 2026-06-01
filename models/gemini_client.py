@@ -1,21 +1,30 @@
-import google.generativeai as genai
-import json
 import pandas as pd
 import io
 import time
 
+from models.llm_client import LLMConfig, create_llm_client
+
 class GeminiClient:
 
-    def __init__(self, api_key):
-        self.api_key = api_key
+    def __init__(
+        self,
+        api_key,
+        provider="gemini",
+        model_name="gemini-2.5-flash",
+        base_url="",
+    ):
+        self.config = LLMConfig(
+            provider=provider,
+            api_key=api_key,
+            model=model_name,
+            base_url=base_url,
+        )
+        self.llm = create_llm_client(self.config)
 
     def convert_topic_to_query(self, topic):
         """
         將簡單的主題名稱轉換為 GPSS 檢索式
         """
-        genai.configure(api_key=self.api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash') 
-        
         final_prompt = f"""
         Role: You are a Senior Patent Attorney and Search Expert specializing in the "Global Patent Search System (GPSS)".
 
@@ -73,8 +82,7 @@ class GeminiClient:
         """
         
         try:
-            response = model.generate_content(final_prompt)
-            return response.text.strip()
+            return self.llm.generate_text(final_prompt, temperature=0.2)
         except Exception as e:
             return f"Generation Failed: {str(e)}"
 
@@ -223,10 +231,6 @@ class GeminiClient:
         if not corpus.strip():
             return None, "Error: 無法提取有效的標題與摘要文字。"
 
-        # --- 4. Gemini API 呼叫 (保持不變) ---
-        genai.configure(api_key=self.api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-
         prompt = f"""
         Role: Expert Patent Strategist & Taxonomist.
         
@@ -261,14 +265,7 @@ class GeminiClient:
         last_error = None
         for attempt in range(1, max_retries + 1):
             try:
-                response = model.generate_content(
-                    prompt,
-                    generation_config={
-                        "response_mime_type": "application/json",
-                        "temperature": 0.2
-                    }
-                )
-                strategy = json.loads(response.text)
+                strategy = self.llm.generate_json(prompt, temperature=0.2)
                 self._validate_strategy(strategy)
                 return strategy, "Success"
             except Exception as e:
@@ -276,19 +273,19 @@ class GeminiClient:
                 if attempt < max_retries:
                     time.sleep(attempt)
 
-        return None, f"Error: Gemini strategy generation failed after {max_retries} attempts: {last_error}"
+        return None, f"Error: LLM strategy generation failed after {max_retries} attempts: {last_error}"
 
     @staticmethod
     def _validate_strategy(strategy):
         if not isinstance(strategy, dict):
-            raise ValueError("Gemini response is not a JSON object")
+            raise ValueError("LLM response is not a JSON object")
 
         for key in ("technologies", "efficacies"):
             items = strategy.get(key)
             if not isinstance(items, list) or not items:
-                raise ValueError(f"Gemini response missing non-empty '{key}' list")
+                raise ValueError(f"LLM response missing non-empty '{key}' list")
 
             strategy[key] = items[:6]
             for item in strategy[key]:
                 if not isinstance(item, dict) or not item.get("label") or not item.get("boolean"):
-                    raise ValueError(f"Gemini response contains invalid item in '{key}'")
+                    raise ValueError(f"LLM response contains invalid item in '{key}'")

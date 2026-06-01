@@ -6,7 +6,7 @@ React + FastAPI patent intelligence analysis system for GPSS patent search, matr
 
 - GPSS login and search automation with Playwright.
 - Automatic captcha recognition with `ddddocr`.
-- Rule-based or Gemini-assisted Boolean query and matrix keyword generation.
+- Rule-based or LLM-assisted Boolean query and matrix keyword generation.
 - Interactive dark-mode React UI built with Vite and Tailwind.
 - Plotly chart rendering for IPC, assignee, country, trend, and technology-effect matrix views.
 - PDF report generation with ReportLab, including chart redraws, source data tables, and written analysis.
@@ -19,9 +19,25 @@ React + FastAPI patent intelligence analysis system for GPSS patent search, matr
 - Automation: Playwright
 - Data processing: Pandas, OpenPyXL, lxml
 - OCR: ddddocr
-- AI: Google Gemini API
+- AI: Google Gemini API or OpenAI-compatible chat completions API
 - Reports: ReportLab
 - Python dependency management: uv
+
+## LLM Configuration
+
+The AI modes are provider/model configurable.
+
+- `gemini`: uses Google Gemini API through `google-generativeai`.
+- `openai-compatible`: uses a `/v1/chat/completions` compatible API with the Python standard library, so it can work with OpenAI, OpenRouter, Groq, vLLM, or Ollama-compatible endpoints.
+
+The frontend exposes:
+
+- Provider
+- Model name
+- Base URL for OpenAI-compatible providers
+- API key
+
+The default model remains `gemini-2.5-flash`, but it is no longer hard-coded in the analysis flow.
 
 ## Setup
 
@@ -82,7 +98,8 @@ http://127.0.0.1:8000
 │   ├── src/styles.css          # Tailwind styles
 │   └── package.json            # Frontend dependencies
 ├── models/
-│   ├── gemini_client.py        # Gemini integration
+│   ├── gemini_client.py        # Patent LLM prompt workflow compatibility layer
+│   ├── llm_client.py           # Gemini and OpenAI-compatible LLM clients
 │   └── gpss_client.py          # GPSS browser automation
 └── services/
     ├── analysis_runner.py      # Main analysis workflow

@@ -19,6 +19,9 @@ class AnalysisInputs:
     gpss_id: str = ""
     gpss_pw: str = ""
     gemini_api_key: str = ""
+    llm_provider: str = "gemini"
+    llm_model: str = "gemini-2.5-flash"
+    llm_base_url: str = "https://api.openai.com/v1"
     login_mode: str = "自動辨識驗證碼"
     search_mode: str = "搜尋布林檢索式"
     matrix_mode: str = "關鍵字規則 (Rule-based)"
@@ -50,12 +53,11 @@ def apply_example(inputs: AnalysisInputs):
 def validate_inputs(inputs: AnalysisInputs, callback: Optional[ProgressCallback] = None):
     apply_example(inputs)
 
-    needs_gemini = (
-        inputs.search_mode == "AI 檢索式推論 (Gemini LLM)"
-        or inputs.matrix_mode == "AI 語意推論 (Gemini LLM)"
-    )
-    if needs_gemini and not inputs.gemini_api_key:
-        raise ValueError("尚未輸入 Gemini API")
+    needs_llm = _is_ai_search(inputs.search_mode) or _is_ai_matrix(inputs.matrix_mode)
+    if needs_llm and not inputs.gemini_api_key:
+        raise ValueError("尚未輸入 LLM API Key")
+    if needs_llm and not inputs.llm_model:
+        raise ValueError("尚未選擇或輸入 LLM 模型")
 
     if inputs.search_mode == "搜尋布林檢索式":
         if not inputs.query or not Parser.is_valid_parentheses(inputs.query):
@@ -81,12 +83,14 @@ def validate_inputs(inputs: AnalysisInputs, callback: Optional[ProgressCallback]
 def run_patent_analysis(inputs: AnalysisInputs, callback: Optional[ProgressCallback] = None):
     validate_inputs(inputs, callback)
 
-    gemini_client = None
-    if inputs.gemini_api_key and (
-        inputs.search_mode == "AI 檢索式推論 (Gemini LLM)"
-        or inputs.matrix_mode == "AI 語意推論 (Gemini LLM)"
-    ):
-        gemini_client = GeminiClient(inputs.gemini_api_key)
+    llm_client = None
+    if inputs.gemini_api_key and (_is_ai_search(inputs.search_mode) or _is_ai_matrix(inputs.matrix_mode)):
+        llm_client = GeminiClient(
+            inputs.gemini_api_key,
+            provider=inputs.llm_provider,
+            model_name=inputs.llm_model,
+            base_url=inputs.llm_base_url,
+        )
 
     gpss_client = GPSSClient()
     try:
@@ -98,10 +102,13 @@ def run_patent_analysis(inputs: AnalysisInputs, callback: Optional[ProgressCallb
         setmgr.settings.gpss_pw = inputs.gpss_pw
         _emit(callback, "success", "登入成功")
 
-        if inputs.search_mode == "AI 檢索式推論 (Gemini LLM)":
+        if _is_ai_search(inputs.search_mode):
             _emit(callback, "info", "正在生成布林檢索式 ...")
-            inputs.query = gemini_client.convert_topic_to_query(inputs.topic)
+            inputs.query = llm_client.convert_topic_to_query(inputs.topic)
             setmgr.settings.gemini_api_key = inputs.gemini_api_key
+            setmgr.settings.llm_provider = inputs.llm_provider
+            setmgr.settings.llm_model = inputs.llm_model
+            setmgr.settings.llm_base_url = inputs.llm_base_url
 
         _emit(callback, "info", "正在搜索專利 ...")
         gpss_client.search(inputs.query)
@@ -114,14 +121,17 @@ def run_patent_analysis(inputs: AnalysisInputs, callback: Optional[ProgressCallb
 
         if gpss_client.dedup_result is not None and gpss_client.dedup_result <= 30000:
             _emit(callback, "info", "正在進行矩陣維度分析 ...")
-            if inputs.matrix_mode == "AI 語意推論 (Gemini LLM)":
+            if _is_ai_matrix(inputs.matrix_mode):
                 gpss_client.fetch_names_and_contents()
-                inputs.matrix, state = gemini_client.generate_gpss_strategy(
+                inputs.matrix, state = llm_client.generate_gpss_strategy(
                     gpss_client.diagram_buffers["contents"]
                 )
                 if state != "Success":
                     raise RuntimeError(state)
                 setmgr.settings.gemini_api_key = inputs.gemini_api_key
+                setmgr.settings.llm_provider = inputs.llm_provider
+                setmgr.settings.llm_model = inputs.llm_model
+                setmgr.settings.llm_base_url = inputs.llm_base_url
             _emit(callback, "success", "維度分析完成")
         else:
             _emit(callback, "warning", "專利筆數超過 30000，跳過矩陣分析步驟")
@@ -165,3 +175,11 @@ def run_patent_analysis(inputs: AnalysisInputs, callback: Optional[ProgressCallb
         "pdf": pdf,
         "search_result": [search_result, dedup_result],
     }
+
+
+def _is_ai_search(mode: str) -> bool:
+    return mode in {"AI 檢索式推論 (LLM)", "AI 檢索式推論 (Gemini LLM)"}
+
+
+def _is_ai_matrix(mode: str) -> bool:
+    return mode in {"AI 語意推論 (LLM)", "AI 語意推論 (Gemini LLM)"}

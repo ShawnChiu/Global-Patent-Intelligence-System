@@ -5,6 +5,9 @@ DEFAULT_STUDENT_ID = "B11315000"
 
 # API 設定
 DEFAULT_GEMINI_API_KEY = ""
+DEFAULT_LLM_PROVIDER = "gemini"
+DEFAULT_LLM_MODEL = "gemini-2.5-flash"
+DEFAULT_LLM_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_GPSS_ID = ""
 DEFAULT_GPSS_PW = ""
 

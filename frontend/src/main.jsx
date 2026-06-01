@@ -2,8 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
-const searchModes = ["搜尋布林檢索式", "AI 檢索式推論 (Gemini LLM)"];
-const matrixModes = ["關鍵字規則 (Rule-based)", "AI 語意推論 (Gemini LLM)"];
+const AI_SEARCH_MODE = "AI 檢索式推論 (LLM)";
+const AI_MATRIX_MODE = "AI 語意推論 (LLM)";
+const searchModes = ["搜尋布林檢索式", AI_SEARCH_MODE];
+const matrixModes = ["關鍵字規則 (Rule-based)", AI_MATRIX_MODE];
+const llmProviders = [
+  ["gemini", "Google Gemini"],
+  ["openai-compatible", "OpenAI 相容 API"]
+];
+const geminiModels = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash", "gemini-1.5-pro"];
+const openAICompatibleModels = ["gpt-4.1-mini", "gpt-4.1", "gpt-4o-mini", "llama-3.3-70b-versatile", "qwen/qwen3-235b-a22b"];
 
 const tabs = [
   ["query", "布林檢索式"],
@@ -38,12 +46,21 @@ function App() {
 
   const isCustom = form.topic_select === "自訂";
   const needsApi = isCustom && (
-    form.search_mode === "AI 檢索式推論 (Gemini LLM)"
-    || form.matrix_mode === "AI 語意推論 (Gemini LLM)"
+    form.search_mode === AI_SEARCH_MODE
+    || form.matrix_mode === AI_MATRIX_MODE
   );
 
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
+  }
+
+  function updateLlmProvider(provider) {
+    setForm((current) => ({
+      ...current,
+      llm_provider: provider,
+      llm_model: provider === "gemini" ? "gemini-2.5-flash" : "gpt-4.1-mini",
+      llm_base_url: provider === "gemini" ? "https://api.openai.com/v1" : current.llm_base_url || "https://api.openai.com/v1"
+    }));
   }
 
   function openMatrix() {
@@ -129,8 +146,8 @@ function App() {
           <>
             <SidebarSection title="🔍 搜尋條件">
               <FieldLabel>選擇搜尋模式</FieldLabel>
-              <RadioGroup name="search" value={form.search_mode} options={searchModes} captions={["快速、免費", "需 Google API Key"]} onChange={(value) => updateField("search_mode", value)} />
-              {form.search_mode !== "AI 檢索式推論 (Gemini LLM)" ? (
+              <RadioGroup name="search" value={form.search_mode} options={searchModes} captions={["快速、免費", "需 LLM API Key"]} onChange={(value) => updateField("search_mode", value)} />
+              {form.search_mode !== AI_SEARCH_MODE ? (
                 <button className="btn-secondary mt-3" onClick={() => setModal("query")}>✏️ 點擊編輯檢索式</button>
               ) : (
                 <p className="mt-3 text-sm text-slate-400">🧠 AI 自動生成布林檢索式 系統將根據主題自動生成複雜的布林檢索式</p>
@@ -139,8 +156,8 @@ function App() {
 
             <SidebarSection title="🤖 分析設定">
               <FieldLabel>選擇矩陣分析模式</FieldLabel>
-              <RadioGroup name="matrix" value={form.matrix_mode} options={matrixModes} captions={["快速、免費，需定義關鍵字", "精準、自動分類，需 Google API Key"]} onChange={(value) => updateField("matrix_mode", value)} />
-              {form.matrix_mode !== "AI 語意推論 (Gemini LLM)" ? (
+              <RadioGroup name="matrix" value={form.matrix_mode} options={matrixModes} captions={["快速、免費，需定義關鍵字", "精準、自動分類，需 LLM API Key"]} onChange={(value) => updateField("matrix_mode", value)} />
+              {form.matrix_mode !== AI_MATRIX_MODE ? (
                 <button className="btn-secondary mt-3" onClick={openMatrix}>✏️ 點擊編輯關鍵字</button>
               ) : (
                 <p className="mt-3 text-sm text-slate-400">🧠 AI 全自動分類 系統將自動閱讀專利摘要並分析功效定義</p>
@@ -150,8 +167,23 @@ function App() {
             {needsApi && (
               <SidebarSection title="🔑 API 設定">
                 <button className="btn-secondary" onClick={() => setModal("api")}>❓ 查看教學</button>
-                {!form.gemini_api_key && <p className="mt-3 text-sm text-amber-300">請輸入 Key 以啟動 AI 功能</p>}
-                <input className="input mt-3" type="password" value={form.gemini_api_key} onChange={(e) => updateField("gemini_api_key", e.target.value)} placeholder="貼上你的 AI Studio Key" />
+                <FieldLabel>LLM 供應商</FieldLabel>
+                <select className="input" value={form.llm_provider} onChange={(e) => updateLlmProvider(e.target.value)}>
+                  {llmProviders.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
+                <FieldLabel>模型</FieldLabel>
+                <input className="input" list="llm-models" value={form.llm_model} onChange={(e) => updateField("llm_model", e.target.value)} placeholder="輸入或選擇模型名稱" />
+                <datalist id="llm-models">
+                  {(form.llm_provider === "gemini" ? geminiModels : openAICompatibleModels).map((model) => <option key={model} value={model} />)}
+                </datalist>
+                {form.llm_provider !== "gemini" && (
+                  <>
+                    <FieldLabel>Base URL</FieldLabel>
+                    <input className="input" value={form.llm_base_url} onChange={(e) => updateField("llm_base_url", e.target.value)} placeholder="https://api.openai.com/v1 或 OpenRouter/Groq/Ollama 相容端點" />
+                  </>
+                )}
+                {!form.gemini_api_key && <p className="mt-3 text-sm text-amber-300">請輸入 API Key 以啟動 AI 功能</p>}
+                <input className="input mt-3" type="password" value={form.gemini_api_key} onChange={(e) => updateField("gemini_api_key", e.target.value)} placeholder="貼上你的 LLM API Key" />
               </SidebarSection>
             )}
           </>
@@ -203,13 +235,12 @@ function App() {
       )}
 
       {modal === "api" && (
-        <Modal onClose={() => setModal(null)} title="❓ 如何取得 Google Gemini API Key">
+        <Modal onClose={() => setModal(null)} title="❓ LLM API 設定說明">
           <ol className="list-decimal space-y-2 pl-5 text-sm">
-            <li>前往 <strong>Google AI Studio</strong>。</li>
-            <li>點擊左下角的 <strong>Get API key</strong>。</li>
-            <li>點擊 <strong>Create API key</strong>。</li>
-            <li>名字隨意，專案選擇 <strong>Gemini API</strong> 後點選 Create。</li>
-            <li>複製生成的 Key 並貼回本系統。</li>
+            <li>Gemini 可到 <strong>Google AI Studio</strong> 建立 API Key，模型可填 `gemini-2.5-flash` 或其他 Gemini 模型。</li>
+            <li>OpenAI 相容 API 可用 OpenAI、OpenRouter、Groq、vLLM 或 Ollama 的 `/v1/chat/completions` 相容端點。</li>
+            <li>使用 OpenAI 相容 API 時，請填 Base URL，例如 `https://api.openai.com/v1` 或服務商提供的 endpoint。</li>
+            <li>API Key 欄位會依供應商作為 Bearer token 使用；若本機服務不需要 Key，可填任意佔位字串。</li>
           </ol>
           <button className="btn-primary mt-4" onClick={() => setModal(null)}>💾 儲存並關閉</button>
         </Modal>
@@ -473,6 +504,9 @@ function defaultForm() {
     gpss_id: "",
     gpss_pw: "",
     gemini_api_key: "",
+    llm_provider: "gemini",
+    llm_model: "gemini-2.5-flash",
+    llm_base_url: "https://api.openai.com/v1",
     login_mode: "自動辨識驗證碼",
     search_mode: "搜尋布林檢索式",
     matrix_mode: "關鍵字規則 (Rule-based)",
@@ -491,11 +525,14 @@ function mapDefaults(defaults) {
     gpss_id: defaults.gpss_id || "",
     gpss_pw: defaults.gpss_pw || "",
     gemini_api_key: defaults.gemini_api_key || "",
+    llm_provider: defaults.llm_provider || "gemini",
+    llm_model: defaults.llm_model || "gemini-2.5-flash",
+    llm_base_url: defaults.llm_base_url || "https://api.openai.com/v1",
     name: "",
     student_id: "",
     login_mode: "自動辨識驗證碼",
-    search_mode: defaults.search_mode || "搜尋布林檢索式",
-    matrix_mode: defaults.matrix_mode || "關鍵字規則 (Rule-based)",
+    search_mode: normalizeSearchMode(defaults.search_mode),
+    matrix_mode: normalizeMatrixMode(defaults.matrix_mode),
     query: defaults.query || "",
     source: defaults.source || "",
     conf_source: defaults.conf_source || "",
@@ -505,6 +542,14 @@ function mapDefaults(defaults) {
 
 function defaultMatrix() {
   return { technologies: [], efficacies: [] };
+}
+
+function normalizeSearchMode(mode) {
+  return mode === "AI 檢索式推論 (Gemini LLM)" ? AI_SEARCH_MODE : (mode || "搜尋布林檢索式");
+}
+
+function normalizeMatrixMode(mode) {
+  return mode === "AI 語意推論 (Gemini LLM)" ? AI_MATRIX_MODE : (mode || "關鍵字規則 (Rule-based)");
 }
 
 function normalizeMatrix(matrix) {
