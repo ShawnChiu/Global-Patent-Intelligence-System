@@ -58,7 +58,7 @@ function App() {
     setForm((current) => ({
       ...current,
       llm_provider: provider,
-      llm_model: provider === "gemini" ? "gemini-2.5-flash" : "gpt-4.1-mini",
+      llm_model: getDefaultModel(provider),
       llm_base_url: provider === "gemini" ? "https://api.openai.com/v1" : current.llm_base_url || "https://api.openai.com/v1"
     }));
   }
@@ -172,10 +172,9 @@ function App() {
                   {llmProviders.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                 </select>
                 <FieldLabel>模型</FieldLabel>
-                <input className="input" list="llm-models" value={form.llm_model} onChange={(e) => updateField("llm_model", e.target.value)} placeholder="輸入或選擇模型名稱" />
-                <datalist id="llm-models">
-                  {(form.llm_provider === "gemini" ? geminiModels : openAICompatibleModels).map((model) => <option key={model} value={model} />)}
-                </datalist>
+                <select className="input" value={normalizeLlmModel(form.llm_provider, form.llm_model)} onChange={(e) => updateField("llm_model", e.target.value)}>
+                  {getModelOptions(form.llm_provider).map((model) => <option key={model} value={model}>{model}</option>)}
+                </select>
                 {form.llm_provider !== "gemini" && (
                   <>
                     <FieldLabel>Base URL</FieldLabel>
@@ -526,7 +525,7 @@ function mapDefaults(defaults) {
     gpss_pw: defaults.gpss_pw || "",
     gemini_api_key: defaults.gemini_api_key || "",
     llm_provider: defaults.llm_provider || "gemini",
-    llm_model: defaults.llm_model || "gemini-2.5-flash",
+    llm_model: normalizeLlmModel(defaults.llm_provider || "gemini", defaults.llm_model),
     llm_base_url: defaults.llm_base_url || "https://api.openai.com/v1",
     name: "",
     student_id: "",
@@ -542,6 +541,19 @@ function mapDefaults(defaults) {
 
 function defaultMatrix() {
   return { technologies: [], efficacies: [] };
+}
+
+function getModelOptions(provider) {
+  return provider === "gemini" ? geminiModels : openAICompatibleModels;
+}
+
+function getDefaultModel(provider) {
+  return getModelOptions(provider)[0];
+}
+
+function normalizeLlmModel(provider, model) {
+  const options = getModelOptions(provider);
+  return options.includes(model) ? model : options[0];
 }
 
 function normalizeSearchMode(mode) {
