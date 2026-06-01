@@ -62,6 +62,7 @@ class SettingsManager:
 
     def save(self):
         try:
+            os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
             with open(self.filepath, 'w', encoding='utf-8') as f:
                 json.dump(asdict(self.settings), f, ensure_ascii=False, indent=4)
         except Exception as e:

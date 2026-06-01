@@ -2,6 +2,7 @@ import google.generativeai as genai
 import json
 import pandas as pd
 import io
+import time
 
 class GeminiClient:
 
@@ -160,7 +161,7 @@ class GeminiClient:
 
         raise ValueError(f"無法識別檔案格式 (檔名: {file_name})。已嘗試所有編碼與讀取引擎均失敗。")
 
-    def generate_gpss_strategy(self, input_data):
+    def generate_gpss_strategy(self, input_data, max_retries=3):
         """
         通用版：自動偵測領域，並生成該領域的矩陣關鍵字與布林檢索式
         """
@@ -257,14 +258,37 @@ class GeminiClient:
         }}
         """
 
-        try:
-            response = model.generate_content(
-                prompt,
-                generation_config={
-                    "response_mime_type": "application/json",
-                    "temperature": 0.2
-                }
-            )
-            return json.loads(response.text), "Success"
-        except Exception as e:
-            return self.generate_gpss_strategy(input_data)
+        last_error = None
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = model.generate_content(
+                    prompt,
+                    generation_config={
+                        "response_mime_type": "application/json",
+                        "temperature": 0.2
+                    }
+                )
+                strategy = json.loads(response.text)
+                self._validate_strategy(strategy)
+                return strategy, "Success"
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries:
+                    time.sleep(attempt)
+
+        return None, f"Error: Gemini strategy generation failed after {max_retries} attempts: {last_error}"
+
+    @staticmethod
+    def _validate_strategy(strategy):
+        if not isinstance(strategy, dict):
+            raise ValueError("Gemini response is not a JSON object")
+
+        for key in ("technologies", "efficacies"):
+            items = strategy.get(key)
+            if not isinstance(items, list) or not items:
+                raise ValueError(f"Gemini response missing non-empty '{key}' list")
+
+            strategy[key] = items[:6]
+            for item in strategy[key]:
+                if not isinstance(item, dict) or not item.get("label") or not item.get("boolean"):
+                    raise ValueError(f"Gemini response contains invalid item in '{key}'")

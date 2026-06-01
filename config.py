@@ -1,4 +1,4 @@
-# 檔案位置：config.py (在專案根目錄，與 main.py 同層)
+# 檔案位置：config.py (在專案根目錄)
 
 DEFAULT_NAME ="USER"
 DEFAULT_STUDENT_ID = "B11315000"

@@ -57,6 +57,8 @@ cover/
 
 # Django stuff:
 *.log
+*.out.log
+*.err.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -99,6 +101,8 @@ ipython_config.py
 #   This is especially recommended for binary packages to ensure reproducibility, and is more
 #   commonly ignored for libraries.
 #uv.lock
+.uv-cache/
+.uv-venv/
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
@@ -208,3 +212,8 @@ __marimo__/
 
 # Data
 .data/
+output/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

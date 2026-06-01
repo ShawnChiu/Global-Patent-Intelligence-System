@@ -1,12 +1,57 @@
-# services/analyzer.py
 import pandas as pd
 import os
-import streamlit as st
 import io
 import re
 import plotly.express as px
 
-class Parser :
+
+def _notify(callback, level, message):
+    if callback:
+        callback(level, message)
+
+
+class Parser:
+    WEB_CHART_BG = "#0f172a"
+    WEB_PLOT_BG = "#111827"
+    WEB_TEXT = "#e5e7eb"
+    WEB_GRID = "rgba(148, 163, 184, 0.18)"
+
+    @staticmethod
+    def _style_web_figure(fig, height=None, left_margin=120, bottom_margin=80, top_margin=72):
+        fig.update_layout(
+            paper_bgcolor=Parser.WEB_CHART_BG,
+            plot_bgcolor=Parser.WEB_PLOT_BG,
+            font=dict(color=Parser.WEB_TEXT, family="Microsoft JhengHei, Segoe UI, Arial", size=12),
+            title=dict(font=dict(size=18, color="#f8fafc"), x=0.02, xanchor="left"),
+            margin=dict(l=left_margin, r=52, t=top_margin, b=bottom_margin),
+            hoverlabel=dict(bgcolor="#020617", bordercolor="rgba(255,255,255,0.14)", font=dict(color="#f8fafc")),
+            uniformtext=dict(minsize=10, mode="hide"),
+        )
+        if height:
+            fig.update_layout(height=height)
+        fig.update_xaxes(
+            showgrid=True,
+            gridcolor=Parser.WEB_GRID,
+            zeroline=False,
+            color=Parser.WEB_TEXT,
+            automargin=True,
+        )
+        fig.update_yaxes(
+            showgrid=False,
+            zeroline=False,
+            color=Parser.WEB_TEXT,
+            automargin=True,
+        )
+        return fig
+
+    @staticmethod
+    def _style_bar_labels(fig):
+        fig.update_traces(
+            textposition="outside",
+            textfont=dict(color="#f8fafc", size=11),
+            cliponaxis=False,
+        )
+        return fig
     
     @staticmethod
     def parse_html_table(uploaded_file):
@@ -48,22 +93,46 @@ class Parser :
             
             # 4. 解析 Pandas
             if html_content:
+                html_source = io.StringIO(html_content)
                 try:
-                    dfs = pd.read_html(html_content, header=0, flavor='lxml')
+                    dfs = pd.read_html(html_source, header=0, flavor='lxml')
                 except:
-                    dfs = pd.read_html(html_content, header=0)
+                    html_source = io.StringIO(html_content)
+                    dfs = pd.read_html(html_source, header=0)
 
                 if dfs:
                     return dfs[0]
                 
         except Exception as e:
-            st.error(f"檔案解析錯誤: {str(e)}")
+            print(f"檔案解析錯誤: {e}")
             return None
         
         return None
 
     @staticmethod
-    def parse_diagrams(diagram_buffers):
+    def _cache_figure(key, fig, fig_buffers, img_buffers, export_image=False, callback=None):
+        fig_buffers[key] = fig
+        if not export_image:
+            return True
+
+        try:
+            if callback:
+                callback("info", f"正在轉換圖表圖片：{key}")
+            img_buffer = io.BytesIO()
+            fig.write_image(img_buffer, format="png", width=1200, height=800, scale=2)
+            img_buffer.seek(0)
+            img_buffers[key] = img_buffer
+            return True
+        except Exception as e:
+            message = f"圖表轉換失敗：{key} - {e}"
+            if callback:
+                callback("warning", message)
+            else:
+                print(message)
+            return False
+
+    @staticmethod
+    def parse_diagrams(diagram_buffers, callback=None, export_images=False):
 
         """
         爬蟲模式專用渲染函式 (Buffer 支援版)
@@ -74,6 +143,16 @@ class Parser :
         
         fig_buffers = {}
         img_buffers = {}
+
+        def cache_figure(key, fig):
+            Parser._cache_figure(
+                key,
+                fig,
+                fig_buffers,
+                img_buffers,
+                export_image=export_images,
+                callback=callback,
+            )
 
         # === Tab 1: IPC 技術分類 ===
         if diagram_buffers.get("ipc"):
@@ -88,34 +167,12 @@ class Parser :
 
                 fig = px.bar(df_plot, x='Count', y='Category', orientation='h', text='label', color='Category', 
                             title="IPC 技術分類 (Top 15)", color_discrete_sequence=px.colors.qualitative.Set2)
-                fig.update_layout(showlegend=False, margin=dict(l=150))
-                    
-                fig_buffers["ipc"] = fig
-                    
-                try:
-                    # 建立一個空的 BytesIO 物件
-                    img_buffer = io.BytesIO()
-                    
-                    # 將圖表寫入這個 buffer (指定格式為 png)
-                    # 需要安裝 kaleido 套件: pip install -U kaleido
-                    fig.write_image(img_buffer, format="png", width=1200, height=800, scale=2)
-                    
-                    # 歸零指標，讓後續程式可以從頭讀取
-                    img_buffer.seek(0)
-                        
-                    # 3. 存回你的 buffers 字典 (建議用新的 key 區分，例如 "ipc_chart")
-                    # 這樣你的 ReportGenerator 就可以直接拿 buffers["ipc_chart"] 去貼圖了
-                    img_buffers["ipc"] = img_buffer
-                        
-                    # (選用) 顯示成功訊息 (除錯用)
-                    # st.toast("IPC 圖表已快取至記憶體")
-                        
-                except Exception as e:
-                    st.error(f"圖表轉換失敗: {e}")
-                    # 提示：如果這裡報錯，通常是因為沒有安裝 kaleido
-                    # 請執行: pip install kaleido==0.2.1 (新版有時有 bug，0.2.1 較穩)
+                Parser._style_web_figure(fig, left_margin=170, bottom_margin=56)
+                Parser._style_bar_labels(fig)
+                fig.update_layout(showlegend=False)
+                cache_figure("ipc", fig)
             else:
-                st.error("表格讀取失敗")
+                _notify(callback, "warning", "IPC 表格讀取失敗")
 
         # === Tab 2: 技術領先企業 ===
         if diagram_buffers.get('assignee'):
@@ -130,31 +187,12 @@ class Parser :
                 if not df_plot.empty:
                     fig = px.bar(df_plot, x='Count', y='Name', orientation='h', title="專利權人排名 (Top 15).", 
                                     text='Count', color='Count', color_continuous_scale='Blues')
-                    fig_buffers["assignee"] = fig
-                try:
-                    # 建立一個空的 BytesIO 物件
-                    img_buffer = io.BytesIO()
-                    
-                    # 將圖表寫入這個 buffer (指定格式為 png)
-                    # 需要安裝 kaleido 套件: pip install -U kaleido
-                    fig.write_image(img_buffer, format="png", width=1200, height=800, scale=2)
-                    
-                    # 歸零指標，讓後續程式可以從頭讀取
-                    img_buffer.seek(0)
-                    
-                    # 3. 存回你的 buffers 字典 (建議用新的 key 區分，例如 "ipc_chart")
-                    # 這樣你的 ReportGenerator 就可以直接拿 buffers["ipc_chart"] 去貼圖了
-                    img_buffers["assignee"] = img_buffer
-                    
-                    # (選用) 顯示成功訊息 (除錯用)
-                    # st.toast("IPC 圖表已快取至記憶體")
-                    
-                except Exception as e:
-                    st.error(f"圖表轉換失敗: {e}")
-                    # 提示：如果這裡報錯，通常是因為沒有安裝 kaleido
-                    # 請執行: pip install kaleido==0.2.1 (新版有時有 bug，0.2.1 較穩)
+                    Parser._style_web_figure(fig, left_margin=210, bottom_margin=56)
+                    Parser._style_bar_labels(fig)
+                    fig.update_layout(showlegend=False, coloraxis_showscale=False)
+                    cache_figure("assignee", fig)
             else:
-                st.error("表格欄位不足")
+                _notify(callback, "warning", "專利權人表格欄位不足")
 
         # === Tab 3: 主要布局國家 ===
         if diagram_buffers.get("country"):
@@ -167,31 +205,10 @@ class Parser :
 
                 fig = px.bar(df_vis, x='Count', y='Country', orientation='h', title="全球專利佈局 (Top 10)",
                                 text='Count', color='Count', color_continuous_scale='Viridis')
-                fig.update_layout(showlegend=False, height=500)
-                fig_buffers["country"] = fig
-                
-                try:
-                    # 建立一個空的 BytesIO 物件
-                    img_buffer = io.BytesIO()
-                    
-                    # 將圖表寫入這個 buffer (指定格式為 png)
-                    # 需要安裝 kaleido 套件: pip install -U kaleido
-                    fig.write_image(img_buffer, format="png", width=1200, height=800, scale=2)
-                    
-                    # 歸零指標，讓後續程式可以從頭讀取
-                    img_buffer.seek(0)
-                    
-                    # 3. 存回你的 buffers 字典 (建議用新的 key 區分，例如 "ipc_chart")
-                    # 這樣你的 ReportGenerator 就可以直接拿 buffers["ipc_chart"] 去貼圖了
-                    img_buffers["country"] = img_buffer
-                    
-                    # (選用) 顯示成功訊息 (除錯用)
-                    # st.toast("IPC 圖表已快取至記憶體")
-                    
-                except Exception as e:
-                    st.error(f"圖表轉換失敗: {e}")
-                    # 提示：如果這裡報錯，通常是因為沒有安裝 kaleido
-                    # 請執行: pip install kaleido==0.2.1 (新版有時有 bug，0.2.1 較穩)
+                Parser._style_web_figure(fig, height=500, left_margin=150, bottom_margin=56)
+                Parser._style_bar_labels(fig)
+                fig.update_layout(showlegend=False, coloraxis_showscale=False)
+                cache_figure("country", fig)
 
         # === Tab 4: 專利申請趨勢 ===
         if diagram_buffers.get("trend_range"):
@@ -203,29 +220,9 @@ class Parser :
                 
                 fig = px.line(df_plot, x='Year', y='Count', markers=True, title="申請趨勢", 
                                 color_discrete_sequence=px.colors.qualitative.Pastel)
-                fig_buffers["trend_range"] = fig
-                try:
-                    # 建立一個空的 BytesIO 物件
-                    img_buffer = io.BytesIO()
-                    
-                    # 將圖表寫入這個 buffer (指定格式為 png)
-                    # 需要安裝 kaleido 套件: pip install -U kaleido
-                    fig.write_image(img_buffer, format="png", width=1200, height=800, scale=2)
-                    
-                    # 歸零指標，讓後續程式可以從頭讀取
-                    img_buffer.seek(0)
-                    
-                    # 3. 存回你的 buffers 字典 (建議用新的 key 區分，例如 "ipc_chart")
-                    # 這樣你的 ReportGenerator 就可以直接拿 buffers["ipc_chart"] 去貼圖了
-                    img_buffers["trend_range"] = img_buffer
-                    
-                    # (選用) 顯示成功訊息 (除錯用)
-                    # st.toast("IPC 圖表已快取至記憶體")
-                    
-                except Exception as e:
-                    st.error(f"圖表轉換失敗: {e}")
-                    # 提示：如果這裡報錯，通常是因為沒有安裝 kaleido
-                    # 請執行: pip install kaleido==0.2.1 (新版有時有 bug，0.2.1 較穩)
+                Parser._style_web_figure(fig, height=500, left_margin=72, bottom_margin=72)
+                fig.update_traces(line=dict(width=3, color="#38bdf8"), marker=dict(size=8, color="#f8fafc"))
+                cache_figure("trend_range", fig)
 
         # === Tab 5: 技術功效矩陣 ===
             
@@ -269,42 +266,32 @@ class Parser :
                                         title=f"技術功效矩陣 ({n_x}x{n_y})", size_max=40,
                                         color_discrete_sequence=px.colors.qualitative.Bold, text='Count')
 
+                    Parser._style_web_figure(
+                        fig,
+                        height=dynamic_height,
+                        left_margin=170,
+                        bottom_margin=90,
+                        top_margin=150,
+                    )
                     fig.update_layout(
-                        xaxis={'side': 'top', 'tickangle': -45, 'dtick': 1, 'automargin': True, 'fixedrange': True},
+                        xaxis={'side': 'top', 'tickangle': -30, 'dtick': 1, 'automargin': True, 'fixedrange': True},
                         yaxis={'autorange': "reversed", 'dtick': 1, 'automargin': True, 'fixedrange': True},
                         height=dynamic_height,
-                        margin=dict(l=20, r=20, t=20, b=20),
                         showlegend=False
                     )
-                    fig.update_traces(textposition='middle center', textfont={'color': 'white', 'weight': 'bold', 'size': 12})
-                    fig_buffers["matrix"] = fig
-                    try:
-                        # 建立一個空的 BytesIO 物件
-                        img_buffer = io.BytesIO()
-                        
-                        # 將圖表寫入這個 buffer (指定格式為 png)
-                        # 需要安裝 kaleido 套件: pip install -U kaleido
-                        fig.write_image(img_buffer, format="png", width=1200, height=800, scale=2)
-                        
-                        # 歸零指標，讓後續程式可以從頭讀取
-                        img_buffer.seek(0)
-                        
-                        # 3. 存回你的 buffers 字典 (建議用新的 key 區分，例如 "ipc_chart")
-                        # 這樣你的 ReportGenerator 就可以直接拿 buffers["ipc_chart"] 去貼圖了
-                        img_buffers["matrix"] = img_buffer
-                        
-                        # (選用) 顯示成功訊息 (除錯用)
-                        # st.toast("IPC 圖表已快取至記憶體")
-                        
-                    except Exception as e:
-                        st.error(f"圖表轉換失敗: {e}")
-                        # 提示：如果這裡報錯，通常是因為沒有安裝 kaleido
-                        # 請執行: pip install kaleido==0.2.1 (新版有時有 bug，0.2.1 較穩)
+                    fig.update_xaxes(tickfont=dict(size=11))
+                    fig.update_yaxes(tickfont=dict(size=11))
+                    fig.update_traces(
+                        textposition='middle center',
+                        textfont={'color': 'white', 'weight': 'bold', 'size': 11},
+                        marker=dict(line=dict(color="rgba(255,255,255,0.45)", width=1)),
+                    )
+                    cache_figure("matrix", fig)
                 else:
-                    st.warning("⚠️ 矩陣數據為空")
+                    _notify(callback, "warning", "矩陣數據為空")
 
             except Exception as e:
-                st.error(f"矩陣解析錯誤: {str(e)}")
+                _notify(callback, "warning", f"矩陣解析錯誤: {e}")
 
         return fig_buffers, img_buffers
 

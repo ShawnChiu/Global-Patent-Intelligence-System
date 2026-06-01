@@ -1,134 +1,100 @@
-# 🌐 GPIS - Global Patent Intelligence System
-### 全球專利自動化分析系統
+# Global Patent Intelligence System
 
-這是一個自動化的專利分析工具，旨在協助使用者從 **全球專利檢索系統 (GPSS)** 快速獲取專利數據，並進行視覺化分析與報告生成。系統整合了 **Google Gemini AI**，可自動生成布林檢索式 (Boolean Query) 與技術功效矩陣分類，大幅降低專利分析的門檻。
+React + FastAPI patent intelligence analysis system for GPSS patent search, matrix analysis, interactive charts, and PDF report generation.
 
-## ✨ 主要功能
+## Features
 
-  * **自動化 GPSS 登入與檢索**：使用 Playwright 自動通過驗證碼 (OCR) 登入並執行檢索。
-  * **雙模式檢索設定**：
-      * **規則式 (Rule-based)**：手動輸入或使用預設範本。
-      * **AI 推論 (Gemini LLM)**：輸入自然語言主題，由 AI 自動生成符合語法的布林檢索式。
-  * **多維度圖表分析**：
-      * IPC 技術領域分類
-      * 技術領先企業 (Assignee)
-      * 主要布局國家
-      * 專利申請趨勢
-  * **技術功效矩陣 (Tech-Efficacy Matrix)**：自動抓取專利摘要，利用關鍵字或 AI 語意分析進行矩陣歸類。
-  * **一鍵生成報告**：自動將分析結果、圖表與詮釋資料彙整為 `.docx` 格式的期末報告。
-  * **單一執行檔打包**：內建 PyInstaller 腳本，可將 Streamlit 應用打包為 `.exe` 執行檔。
+- GPSS login and search automation with Playwright.
+- Automatic captcha recognition with `ddddocr`.
+- Rule-based or Gemini-assisted Boolean query and matrix keyword generation.
+- Interactive dark-mode React UI built with Vite and Tailwind.
+- Plotly chart rendering for IPC, assignee, country, trend, and technology-effect matrix views.
+- PDF report generation with ReportLab, including chart redraws, source data tables, and written analysis.
+- Local settings persisted under `.data/user_settings.json`.
 
-## 🛠️ 技術架構
+## Tech Stack
 
-  * **UI 框架**: [Streamlit](https://streamlit.io/)
-  * **網頁自動化**: [Playwright](https://playwright.dev/)
-  * **生成式 AI**: [Google Gemini API](https://ai.google.dev/)
-  * **數據處理**: Pandas, EasyOCR (驗證碼辨識)
-  * **視覺化**: Plotly
-  * **報告生成**: Python-docx
+- Frontend: React, Vite, Tailwind, Plotly.js
+- Backend: FastAPI, Uvicorn
+- Automation: Playwright
+- Data processing: Pandas, OpenPyXL, lxml
+- OCR: ddddocr
+- AI: Google Gemini API
+- Reports: ReportLab
+- Python dependency management: uv
 
-## ⚙️ 安裝說明
+## Setup
 
-### 1\. 環境需求
-
-  * Python 3.9 或以上版本
-  * Google Chrome 瀏覽器 (供 Playwright 使用)
-
-### 2\. 安裝依賴套件
-
-請確保目錄下有 `requirements.txt` ，然後執行：
-
-```bash
-pip install -r requirements.txt
+```powershell
+uv sync
+uv run playwright install chromium
+cd frontend
+npm install
 ```
 
-### 3\. 安裝 Playwright 瀏覽器核心
+## Development
 
-系統需要 Chromium 核心來執行爬蟲：
+From the project root:
 
-```bash
-playwright install chromium
+```powershell
+.\.uv-venv\Scripts\python.exe run_react.py
 ```
 
-## 🚀 執行方式
+Then open:
 
-### 開發模式 (Development)
-
-直接使用 Streamlit 啟動：
-
-```bash
-streamlit run main.py
+```text
+http://127.0.0.1:5173
 ```
 
-或者使用包裝好的啟動腳本 (會自動開啟瀏覽器)：
+The development launcher starts:
 
-```bash
-python run.py
+- FastAPI backend on `http://127.0.0.1:8000`
+- Vite frontend on `http://127.0.0.1:5173`
+
+## Production-Like Local Run
+
+Build the frontend:
+
+```powershell
+cd frontend
+npm run build
+cd ..
+.\.uv-venv\Scripts\python.exe -m uvicorn fast_app:app --host 127.0.0.1 --port 8000
 ```
 
-### 打包為執行檔 (Build .exe)
+Then open:
 
-本專案包含 `build.py`，可將環境打包為獨立的 `.exe` 檔案 (Windows)：
-
-```bash
-python build.py
+```text
+http://127.0.0.1:8000
 ```
 
-*打包完成後，執行檔將位於 `dist/` 資料夾中。*
-
-## 📖 使用指南
-
-1.  **啟動系統**：執行程式後，瀏覽器將自動開啟操作介面。
-2.  **設定基本資料**：
-      * 於側邊欄點擊「✏️ 點擊編輯基本資料」。
-      * 輸入您的 **GPSS 帳號** 與 **密碼** (必填，用於爬蟲登入)。
-      * (選填) 輸入 **Gemini API Key** 以啟用 AI 輔助功能。
-3.  **選擇主題**：
-      * 可選擇預設範例 (如：智慧座艙 AR-HUD、矽光子技術...)。
-      * 或選擇「自訂」並輸入感興趣的技術關鍵字。
-4.  **開始分析**：
-      * 點擊「🚀 開始分析」。
-      * 系統將自動執行：登入 -\> 檢索 -\> 抓圖 -\> 矩陣分析 -\> 生成報告。
-5.  **下載報告**：分析完成後，頁面頂端會出現下載按鈕，可取得完整的 Word 報告。
-
-## 📂 專案結構
+## Project Structure
 
 ```text
 .
-├── main.py                 # Streamlit 主程式入口
-├── run.py                  # 開發環境啟動腳本 (Wrapper)
-├── build.py                # PyInstaller 打包腳本
-├── config.py               # 預設參數與範例資料
-├── requirements.txt        # (需自行建立) 依賴套件列表
+├── fast_app.py                 # FastAPI API and React static serving
+├── run_react.py                # Development launcher
+├── config.py                   # Defaults and example topics
+├── pyproject.toml              # Python dependencies
+├── uv.lock                     # Locked Python dependency graph
+├── frontend/
+│   ├── src/main.jsx            # React application
+│   ├── src/styles.css          # Tailwind styles
+│   └── package.json            # Frontend dependencies
 ├── models/
-│   ├── gemini_client.py    # Google Gemini API 串接
-│   └── gpss_client.py      # GPSS 爬蟲與自動化邏輯
-├── services/
-│   ├── workflow.py         # 主要業務邏輯控制
-│   ├── state.py            # Session State 管理
-│   ├── settings_manager.py # 使用者設定存取 (.data/user_settings.json)
-│   ├── parser.py           # 表格解析與圖表繪製
-│   ├── gen_report.py       # Word 報告生成器
-│   └── captcha.py          # 驗證碼辨識 (EasyOCR)
-└── views/
-    └── components.py       # Streamlit UI 元件與 Dialog
+│   ├── gemini_client.py        # Gemini integration
+│   └── gpss_client.py          # GPSS browser automation
+└── services/
+    ├── analysis_runner.py      # Main analysis workflow
+    ├── captcha.py              # Captcha OCR
+    ├── chart_data.py           # Plotly chart data extraction
+    ├── gen_report.py           # PDF report generation
+    ├── parser.py               # GPSS table parsing and Plotly figure creation
+    └── settings_manager.py     # User settings persistence
 ```
 
-## ⚠️ 注意事項
+## Notes
 
-1.  **GPSS 帳號**：本系統僅提供自動化操作工具，使用者需自行擁有合法的 GPSS 帳號權限。
-2.  **驗證碼辨識**：登入時使用 OCR 辨識驗證碼，若失敗系統會自動重試 (預設 10 次)，若網路不穩或驗證碼過於複雜可能導致登入失敗。
-3.  **Kaleido**：圖表轉圖片功能依賴 `kaleido` 套件，建議使用 `0.2.1` 版本以確保穩定性。
-
-## ⚖️ 免責聲明
-
-本工具僅供 IBG009301 智慧財產實戰策略 課程研究使用。請遵守 [經濟部智慧財產局全球專利檢索系統](https://www.google.com/search?q=https://gpss.tipo.gov.tw/) 之使用規範，請勿進行高頻率惡意爬取或用於商業營利行為。
-
-## 👨‍💻 開發成員 (Contributors)
-
-| 學號 (Student ID) | GitHub |
-| :---: | :---: |
-| **B11315053** | [@Paidaxin0226](https://github.com/Paidaxin0226) |
-| **B11315059** | [@ShawnChiu](https://github.com/ShawnChiu) |
-| **B11330043** | [@yomiyumy](https://github.com/yomiyumy) |
-
+- Do not commit `.data/`; it may contain local GPSS credentials and API keys.
+- `frontend/dist/`, `frontend/node_modules/`, `.uv-venv/`, `.uv-cache/`, and generated output folders are ignored.
+- The PDF report redraws charts from Plotly data directly, so it does not depend on Kaleido or Word/Docx image export.
